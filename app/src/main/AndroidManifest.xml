@@ -25,6 +25,15 @@
             android:name="com.google.firebase.ml.vision.DEPENDENCIES"
             android:value="ocr" />
 
+        <activity android:name=".ui.activities.MainActivity"
+            android:screenOrientation="nosensor">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+
         <activity android:name=".ui.activities.CameraActivity"
             android:screenOrientation="landscape"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -41,15 +50,16 @@
 
         <activity android:name=".ui.activities.SelectionActivity"
             android:screenOrientation="nosensor">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+        </activity>
 
         <activity
             android:name=".ui.activities.SettingsActivity"
             android:label="@string/settings"
+            android:parentActivityName=".ui.activities.MainActivity"
             android:screenOrientation="nosensor">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.activities.MainActivity"/>
         </activity>
 
 
