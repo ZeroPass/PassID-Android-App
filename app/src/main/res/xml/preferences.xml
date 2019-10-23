@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:key="@string/label_additional_information_profession">
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:key="server_category"
+        app:title="Server settings">
+
+        <EditTextPreference
+            app:iconSpaceReserved="false"
+            android:inputType="textUri"
+            android:key="@string/setting_server_url"
+            android:selectAllOnFocus="true"
+            android:imeOptions="actionDone"
+            android:positiveButtonText="@string/btn_text_save"
+            android:title="Server URL" />
+    </PreferenceCategory>
+
+</PreferenceScreen>
