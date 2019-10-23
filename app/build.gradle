@@ -22,6 +22,8 @@ android {
         debug {
             debuggable true
             jniDebuggable true
+            ext.enableCrashlytics = false
+            ext.alwaysUpdateBuildId = false
         }
     }
 
