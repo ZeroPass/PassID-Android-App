@@ -19,6 +19,7 @@ package example.jllarraz.com.passportreader.ui.activities
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.view.MenuItem
 import androidx.fragment.app.Fragment
 import androidx.appcompat.app.AppCompatActivity
 
@@ -33,6 +34,8 @@ class SelectionActivity : AppCompatActivity(), SelectionFragment.SelectionFragme
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setTitle(R.string.selection_activity_title)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         setContentView(R.layout.activity_camera)
         if (null == savedInstanceState) {
             supportFragmentManager.beginTransaction()
@@ -75,6 +78,11 @@ class SelectionActivity : AppCompatActivity(), SelectionFragment.SelectionFragme
             }
         }
         super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressed()
+        return true
     }
 
     private fun test() {
