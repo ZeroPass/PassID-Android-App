@@ -7,6 +7,7 @@
     <dimen name="margin_small">8dp</dimen>
     <dimen name="margin_medium_small">12dp</dimen>
     <dimen name="margin_medium">22dp</dimen>
+    <dimen name="padding_small">8dp</dimen>
     <dimen name="text_size_medium">16sp</dimen>
     <dimen name="text_size_small">13sp</dimen>
     <dimen name="text_size_default">14sp</dimen>
