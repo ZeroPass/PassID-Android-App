@@ -50,6 +50,12 @@
 
         <activity android:name=".ui.activities.SelectionActivity"
             android:screenOrientation="nosensor">
+            <intent-filter>
+                <action android:name="example.jllarraz.com.passportreader.ui.activities.ACTION_REGISTER"/>
+                <action android:name="example.jllarraz.com.passportreader.ui.activities.ACTION_LOGIN"/>
+                <action android:name="example.jllarraz.com.passportreader.ui.activities.ACTION_VIEW_PASSPORT"/>
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <activity

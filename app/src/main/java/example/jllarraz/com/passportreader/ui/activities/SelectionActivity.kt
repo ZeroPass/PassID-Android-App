@@ -127,5 +127,9 @@ class SelectionActivity : AppCompatActivity(), SelectionFragment.SelectionFragme
         private val REQUEST_NFC = 11
 
         private val TAG_SELECTION_FRAGMENT = "TAG_SELECTION_FRAGMENT"
+
+        const val ACTION_REGISTER      = "example.jllarraz.com.passportreader.ui.activities.ACTION_REGISTER"
+        const val ACTION_LOGIN         = "example.jllarraz.com.passportreader.ui.activities.ACTION_LOGIN"
+        const val ACTION_VIEW_PASSPORT = "example.jllarraz.com.passportreader.ui.activities.ACTION_VIEW_PASSPORT"
     }
 }
