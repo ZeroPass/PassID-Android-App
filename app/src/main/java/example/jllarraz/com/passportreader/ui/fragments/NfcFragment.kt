@@ -31,6 +31,7 @@ import java.security.Security
 
 import example.jllarraz.com.passportreader.R
 import example.jllarraz.com.passportreader.common.IntentData
+import example.jllarraz.com.passportreader.data.PassIdData
 import example.jllarraz.com.passportreader.data.Passport
 import example.jllarraz.com.passportreader.utils.NFCDocumentTag
 import io.reactivex.disposables.CompositeDisposable
@@ -39,6 +40,7 @@ import io.reactivex.disposables.CompositeDisposable
 class NfcFragment : androidx.fragment.app.Fragment() {
 
     private var mrzInfo: MRZInfo? = null
+    private var passIdChallenge: ByteArray? = null
     private var nfcFragmentListener: NfcFragmentListener? = null
     private var textViewPassportNumber: TextView? = null
     private var textViewDateOfBirth: TextView? = null
@@ -52,7 +54,6 @@ class NfcFragment : androidx.fragment.app.Fragment() {
                               savedInstanceState: Bundle?): View? {
 
         val inflatedView = inflater.inflate(R.layout.fragment_nfc, container, false)
-
         return inflatedView
     }
 
@@ -60,11 +61,15 @@ class NfcFragment : androidx.fragment.app.Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val arguments = arguments
-        if (arguments!!.containsKey(IntentData.KEY_MRZ_INFO)) {
-            mrzInfo = arguments.getSerializable(IntentData.KEY_MRZ_INFO) as MRZInfo
-        } else {
+        if (!arguments!!.containsKey(IntentData.KEY_MRZ_INFO)) {
             //error
+            return
         }
+        else if(arguments.containsKey(IntentData.KEY_PASSID_CHALLENGE)) {
+            passIdChallenge = arguments.getSerializable(IntentData.KEY_PASSID_CHALLENGE) as ByteArray
+        }
+
+        mrzInfo = arguments.getSerializable(IntentData.KEY_MRZ_INFO) as MRZInfo
 
         textViewPassportNumber = view.findViewById(R.id.value_passport_number)
         textViewDateOfBirth = view.findViewById(R.id.value_DOB)
@@ -77,7 +82,7 @@ class NfcFragment : androidx.fragment.app.Fragment() {
             return
         }
         val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG) ?: return
-        val subscribe = NFCDocumentTag().handleTag(context!!, tag, mrzInfo!!, object : NFCDocumentTag.PassportCallback {
+        val subscribe = NFCDocumentTag().handleTag(context!!, tag, mrzInfo!!, passIdChallenge, object : NFCDocumentTag.PassportCallback {
 
             override fun onPassportReadStart() {
                 onNFCSReadStart()
@@ -90,6 +95,10 @@ class NfcFragment : androidx.fragment.app.Fragment() {
             override fun onPassportRead(passport: Passport?) {
                 this@NfcFragment.onPassportRead(passport)
 
+            }
+
+            override fun onPassIdDataRead(passIdData: PassIdData?) {
+                this@NfcFragment.onPassIdDataRead(passIdData)
             }
 
             override fun onAccessDeniedException(exception: AccessDeniedException) {
@@ -199,10 +208,19 @@ class NfcFragment : androidx.fragment.app.Fragment() {
         }
     }
 
+    protected fun onPassIdDataRead(passIdData: PassIdData?) {
+        mHandler.post {
+            if (nfcFragmentListener != null) {
+                nfcFragmentListener!!.onPassIdDataRead(passIdData )
+            }
+        }
+    }
+
     interface NfcFragmentListener {
         fun onEnableNfc()
         fun onDisableNfc()
         fun onPassportRead(passport: Passport?)
+        fun onPassIdDataRead(passIdData: PassIdData?)
         fun onCardException(cardException: Exception?)
     }
 
@@ -215,10 +233,13 @@ class NfcFragment : androidx.fragment.app.Fragment() {
             Security.addProvider(BouncyCastleProvider())
         }
 
-        fun newInstance(mrzInfo: MRZInfo): NfcFragment {
+        fun newInstance(mrzInfo: MRZInfo, passIdChallenge: ByteArray? = null): NfcFragment {
             val myFragment = NfcFragment()
             val args = Bundle()
             args.putSerializable(IntentData.KEY_MRZ_INFO, mrzInfo)
+            if (passIdChallenge != null) {
+                args.putSerializable(IntentData.KEY_PASSID_CHALLENGE, passIdChallenge)
+            }
             myFragment.arguments = args
             return myFragment
         }
