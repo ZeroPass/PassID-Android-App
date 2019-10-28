@@ -46,6 +46,10 @@ class PassIdData : Parcelable {
         }
     }
 
+    constructor() {
+        ccSignatures = ArrayList()
+    }
+
     override fun describeContents(): Int {
         return 0
     }
