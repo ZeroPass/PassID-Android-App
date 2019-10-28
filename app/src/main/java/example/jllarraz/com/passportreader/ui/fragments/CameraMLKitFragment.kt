@@ -38,6 +38,7 @@ import example.jllarraz.com.passportreader.R
 import example.jllarraz.com.passportreader.mlkit.OcrMrzDetectorProcessor
 import example.jllarraz.com.passportreader.utils.MRZUtil
 import io.fotoapparat.preview.Frame
+import io.fotoapparat.preview.FrameProcessor
 import io.fotoapparat.view.CameraView
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -85,7 +86,7 @@ class CameraMLKitFragment : CameraFragment() {
     }
 
     override fun onDestroyView() {
-        if (!disposable.isDisposed()) {
+        if (!disposable.isDisposed) {
             disposable.dispose();
         }
         super.onDestroyView()
@@ -116,20 +117,20 @@ class CameraMLKitFragment : CameraFragment() {
 
     override val callbackFrameProcessor: io.fotoapparat.preview.FrameProcessor
         get() {
-            val callbackFrameProcessor2 = object : io.fotoapparat.preview.FrameProcessor {
+            return object : FrameProcessor {
                 override fun process(frame: Frame) {
                     try {
                         if (!isDecoding) {
                             isDecoding = true
 
                             if (frameProcessor != null) {
-                                val subscribe = Single.fromCallable({
-                                    (frameProcessor as OcrMrzDetectorProcessor).process(frame, rotation)
-                                }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe({ success ->
+                                val subscribe = Single.fromCallable {
+                                    (frameProcessor!!).process(frame, rotation)
+                                }.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe { success ->
                                     {
                                         //Don't do anything
                                     }
-                                })
+                                }
                                 disposable.add(subscribe)
                             }
                         }
@@ -139,8 +140,6 @@ class CameraMLKitFragment : CameraFragment() {
 
                 }
             }
-            return  callbackFrameProcessor2
-
         }
 
     ////////////////////////////////////////////////////////////////////////////////////////
@@ -176,7 +175,7 @@ class CameraMLKitFragment : CameraFragment() {
     //       Instantiate the text processor to perform OCR
     //
     ////////////////////////////////////////////////////////////////////////////////////////
-    protected val textProcessor: OcrMrzDetectorProcessor
+    private val textProcessor: OcrMrzDetectorProcessor
         get() = OcrMrzDetectorProcessor(object : OcrMrzDetectorProcessor.MRZCallback {
             override fun onMRZRead(mrzInfo: MRZInfo, timeRequired: Long) {
                 isDecoding = false
@@ -288,7 +287,7 @@ class CameraMLKitFragment : CameraFragment() {
 
         companion object {
 
-            private val ARG_MESSAGE = "message"
+            private const val ARG_MESSAGE = "message"
 
             fun newInstance(message: String): ErrorDialog {
                 val dialog = ErrorDialog()
@@ -342,13 +341,11 @@ class CameraMLKitFragment : CameraFragment() {
          */
         private val TAG = CameraMLKitFragment::class.java.simpleName
 
-        private val REQUEST_CAMERA_PERMISSION = 1
-        private val FRAGMENT_DIALOG = "CameraMLKitFragment"
+        private const val REQUEST_CAMERA_PERMISSION = 1
+        private const val FRAGMENT_DIALOG = "CameraMLKitFragment"
 
         fun newInstance(): CameraMLKitFragment {
             return CameraMLKitFragment()
         }
     }
-
-
 }
