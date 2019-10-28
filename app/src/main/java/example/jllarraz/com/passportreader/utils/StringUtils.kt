@@ -14,6 +14,10 @@ object StringUtils {
         return String(hexChars)
     }
 
+    fun hexToBytes(hexString: String) = ByteArray(hexString.length / 2) {
+        hexString.substring(it * 2, it * 2 + 2).toInt(16).toByte()
+    }
+
     fun isValidHttpUrl(url: String): Boolean {
         val valid = Patterns.WEB_URL.matcher(url).matches()
         return valid && "^https?://".toRegex().containsMatchIn(url)
