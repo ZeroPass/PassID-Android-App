@@ -39,6 +39,7 @@
     <string name="label_document_nationality">Nationality</string>
     <string name="label_passport">Passport</string>
     <string name="label_not_available">NA</string>
+    <string name="label_please_wait">Please wait …</string>
 
     <string name="name">%1s %2s</string>
 

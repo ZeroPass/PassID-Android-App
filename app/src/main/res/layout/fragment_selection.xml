@@ -1,135 +1,142 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/scroll_view"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:padding="@dimen/margin_medium"
-    android:clipChildren="false"
-    android:scrollbars="none"
+    android:layout_height="match_parent"
+    android:importantForAutofill="noExcludeDescendants"
+    tools:ignore="UnusedAttribute">
 
-    >
-
-
-    <LinearLayout
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        >
+        android:clipChildren="false"
+        android:padding="@dimen/margin_medium"
+        android:scrollbars="none"
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/titleRadioGroup"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="22dp"
-        android:text="@string/selection_title"
-        style="@style/InputLabel" />
-
-    <RadioGroup
-        android:checkedButton="@+id/radioButtonManual"
-        android:id="@+id/radioButtonDataEntry"
-        style="@style/ToogleGroup"
-        android:orientation="horizontal">
-
-        <androidx.appcompat.widget.AppCompatRadioButton
-            android:layout_marginLeft="1dp"
-            android:id="@+id/radioButtonManual"
-            android:text="@string/selection_manual"
-            style="@style/ToogleButton.Left"
-            />
-
-        <androidx.appcompat.widget.AppCompatRadioButton
-            android:layout_marginRight="1dp"
-            android:id="@+id/radioButtonOcr"
-            android:text="@string/selection_automatic"
-            style="@style/ToogleButton.Right"
-            />
-    </RadioGroup>
-
-
-
-    <LinearLayout
-        android:id="@+id/layoutManual"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="22dp"
-        >
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/textInputLayoutDocumentNumber"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                >
-
-                <androidx.appcompat.widget.AppCompatEditText
-                    android:id="@+id/documentNumber"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/prompt_document_number"
-                    android:imeOptions="actionDone"
-                    android:inputType="textCapCharacters"
-                    android:maxLength="9"
-                    android:maxLines="3" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/textInputLayoutDocumentExpiration"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                >
-
-                <androidx.appcompat.widget.AppCompatEditText
-                    android:id="@+id/documentExpiration"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/prompt_document_expiration"
-                    android:imeOptions="actionDone"
-                    android:inputType="number"
-                    android:maxLength="6"
-                    android:maxLines="3" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/textInputLayoutDateOfBirth"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            >
-
-            <androidx.appcompat.widget.AppCompatEditText
-                android:id="@+id/documentDateOfBirth"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/prompt_document_date_of_birth"
-                android:imeOptions="actionDone"
-                android:inputType="number"
-                android:maxLength="6"
-                android:maxLines="3" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <Button
-            android:id="@+id/buttonReadNfc"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/read_nfc"/>
-        </LinearLayout>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
 
         <LinearLayout
-            android:id="@+id/layoutAutomatic"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="22dp"
-            android:visibility="gone"
-            >
+            android:orientation="vertical">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/titleRadioGroup"
+                style="@style/InputLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:text="@string/selection_title" />
+
+            <RadioGroup
+                android:id="@+id/radioButtonDataEntry"
+                style="@style/ToogleGroup"
+                android:checkedButton="@+id/radioButtonManual"
+                android:orientation="horizontal">
+
+                <androidx.appcompat.widget.AppCompatRadioButton
+                    android:id="@+id/radioButtonManual"
+                    style="@style/ToogleButton.Left"
+                    android:layout_marginLeft="1dp"
+                    android:text="@string/selection_manual" />
+
+                <androidx.appcompat.widget.AppCompatRadioButton
+                    android:id="@+id/radioButtonOcr"
+                    style="@style/ToogleButton.Right"
+                    android:layout_marginRight="1dp"
+                    android:text="@string/selection_automatic" />
+            </RadioGroup>
+
+
+            <LinearLayout
+                android:id="@+id/layoutManual"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:orientation="vertical">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/textInputLayoutDocumentNumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <androidx.appcompat.widget.AppCompatEditText
+                        android:id="@+id/documentNumber"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/prompt_document_number"
+                        android:imeOptions="actionDone"
+                        android:inputType="textCapCharacters"
+                        android:maxLength="9"
+                        android:maxLines="3" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/textInputLayoutDocumentExpiration"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <androidx.appcompat.widget.AppCompatEditText
+                        android:id="@+id/documentExpiration"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/prompt_document_expiration"
+                        android:imeOptions="actionDone"
+                        android:inputType="number"
+                        android:maxLength="6"
+                        android:maxLines="3" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/textInputLayoutDateOfBirth"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <androidx.appcompat.widget.AppCompatEditText
+                        android:id="@+id/documentDateOfBirth"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/prompt_document_date_of_birth"
+                        android:imeOptions="actionDone"
+                        android:inputType="number"
+                        android:maxLength="6"
+                        android:maxLines="3" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <Button
+                    android:id="@+id/buttonReadNfc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/read_nfc" />
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:id="@+id/layoutAutomatic"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:orientation="vertical"
+                android:visibility="gone"></LinearLayout>
+
+
         </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
+    <include
+        android:id="@+id/llProgressBar"
+        layout="@layout/layout_progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 
-    </LinearLayout>
-
-</androidx.core.widget.NestedScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

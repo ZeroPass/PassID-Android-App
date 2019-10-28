@@ -105,6 +105,21 @@ class SelectionActivity : AppCompatActivity(), SelectionFragment.SelectionFragme
         startActivityForResult(intent, REQUEST_MRZ)
     }
 
+    private fun hideProgressBar() {
+        llProgressBar?.visibility = View.GONE
+    }
+
+    private fun showProgressBar(msg: String = "") {
+        var msg = msg
+        if (msg.isEmpty()) {
+            msg = R.string.label_please_wait.toString()
+        }
+        llProgressBar?.message?.text = msg
+        llProgressBar?.visibility = View.VISIBLE
+    }
+
+    private var passIdClient: PassIdClient? = null
+
     companion object {
 
         private val TAG = SelectionActivity::class.java.simpleName
