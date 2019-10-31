@@ -26,6 +26,9 @@ allprojects {
         google()
         jcenter()
         mavenCentral()
+
+        //YAJ-RPC
+        maven { url 'https://jitpack.io' }
     }
 }
 
