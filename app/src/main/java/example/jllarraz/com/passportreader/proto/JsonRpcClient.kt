@@ -1,15 +1,22 @@
 package example.jllarraz.com.passportreader.proto
 
+import android.util.Log
 import info.laht.yajrpc.*
 import info.laht.yajrpc.net.RpcClient
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import okio.Buffer
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.*
 
-typealias Consumer<T> = (T) -> Unit
+
+
+typealias RpcCallback = (RpcResponse?, IOException?) -> Unit
+
+typealias RpcConnectionError = IOException
+class RpcConnectionTimeout(e: String) : RpcConnectionError(e)
 
 
 class JsonRpcClient  constructor(
@@ -21,12 +28,13 @@ class JsonRpcClient  constructor(
     var origin: String? = null
 
     private val executor = Executors.newSingleThreadExecutor()
-    private val callbacks = mutableMapOf<String, Consumer<RpcResponse>>()
+    private val callbacks = mutableMapOf<String, RpcCallback>()
 
     override fun notify(methodName: String, params: RpcParams) {
         send(RpcRequestOut(methodName, params).apply {
             id = UUID.randomUUID().toString()
         })
+        var zz: Map<String, String>
     }
 
     @Throws(TimeoutException::class)
@@ -35,12 +43,15 @@ class JsonRpcClient  constructor(
             var reqid = ""
             try {
                 var response: RpcResponse? = null
+                var ioError: IOException? = null
+
                 val latch = CountDownLatch(1)
                 val request = RpcRequestOut(methodName, params).apply {
                     id = UUID.randomUUID().toString()
                     reqid = id.toString()
-                    callbacks[reqid] = {
-                        response = it
+                    callbacks[reqid] = { resp: RpcResponse?, error: IOException? ->
+                        response = resp
+                        ioError = error
                         latch.countDown()
                     }
                 }
@@ -48,8 +59,12 @@ class JsonRpcClient  constructor(
                 val call = send(request)
                 if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
                     call.cancel()
-                    throw TimeoutException("Timeout!")
+                    throw RpcConnectionTimeout("Timeout!")
                 }
+                else if(ioError != null) {
+                    throw RpcConnectionError(ioError)
+                }
+
                 response!!
             }
             finally {
@@ -81,18 +96,13 @@ class JsonRpcClient  constructor(
         return post(request, object: Callback {
             override fun onResponse(call: Call, resp: Response) {
                 val rpcResp = resp.toRpcResponse()
-                if(rpcResp.id != null) { // id can be null
-                    val id = rpcResp.id.toString()
-                    if (callbacks.contains(id)) {
-                        callbacks[id]?.also { callback ->
-                            callback.invoke(rpcResp)
-                        }
-                    }
-                }
+                call(rpcResp.id, rpcResp)
             }
             override fun onFailure(call: Call, e: IOException) {
+                val r = call.request()
                 if(!e.message.equals("Canceled", ignoreCase = true)) {
-                    throw e
+                    val req = call.request().toRpcRequest()
+                    call(req.id, null, e)
                 }
             }
         })
@@ -102,7 +112,27 @@ class JsonRpcClient  constructor(
         executor.shutdown()
     }
 
+    private fun call(rpcId: Any?, resp: RpcResponse?, error: IOException? = null) {
+        if(rpcId != null) { // id can be null
+            val id = rpcId.toString()
+            if (callbacks.contains(id)) {
+                callbacks[id]?.also { callback ->
+                    callback.invoke(resp, error)
+                }
+            }
+        }
+        else {
+            Log.e(TAG, "Could not call callback, id not found")
+            if(error != null) {
+                Log.e(TAG, "ioerror: ${error.message}")
+            }else{
+                Log.e(TAG, "rpc resp: ${resp.toString()}")
+            }
+        }
+    }
+
     companion object {
+        private val TAG = JsonRpcClient::class.java.simpleName
         private val JSON = "application/json; charset=utf-8".toMediaType()
 
         private fun Request.Builder.addOrigin(origin: String?): Request.Builder {
@@ -128,8 +158,14 @@ class JsonRpcClient  constructor(
             return this.toJson().toRequestBody(JSON)
         }
 
+        private fun Request.toRpcRequest() : RpcRequestOut {
+            val buffer = Buffer()
+            this.body?.writeTo(buffer)
+            return YAJRPC.fromJson(buffer.readUtf8())
+        }
+
         private fun Response.toRpcResponse() : RpcResponse {
-            return YAJRPC.fromJson<RpcResponse>(this.body?.string() as String)
+            return YAJRPC.fromJson(this.body?.string() as String)
         }
     }
 }

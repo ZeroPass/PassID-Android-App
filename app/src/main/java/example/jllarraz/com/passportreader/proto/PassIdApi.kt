@@ -7,9 +7,7 @@ import info.laht.yajrpc.RpcParams
 import info.laht.yajrpc.RpcNoParams
 import info.laht.yajrpc.RpcResponse
 import kotlinx.coroutines.*
-import java.io.IOException
 import java.lang.Exception
-import java.util.concurrent.TimeoutException
 
 import org.jmrtd.lds.SODFile
 import org.jmrtd.lds.icao.DG14File
@@ -42,7 +40,7 @@ class PassIdApi(url: String) {
 /************************************************************************************************************/
 
     /* API: passID.ping */
-    @Throws(PassIdApiError::class, TimeoutException::class, IOException::class)
+    @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
     suspend fun ping() : Int {
         Log.d(TAG, "Sending ping request ...")
 
@@ -57,7 +55,7 @@ class PassIdApi(url: String) {
     }
 
     /* API: passID.getChallenge */
-    @Throws(PassIdApiError::class, TimeoutException::class, IOException::class)
+    @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
     suspend fun getChallenge() : PassIdProtoChallenge {
         Log.d(TAG, "Requesting challenge from server ...")
 
@@ -68,7 +66,7 @@ class PassIdApi(url: String) {
     }
 
     /* API: passID.register */
-    @Throws(PassIdApiError::class, TimeoutException::class, IOException::class)
+    @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
     suspend fun register(dg15: DG15File, sod: SODFile, cid: CID, csigs: List<ByteArray>, dg14: DG14File? = null) : PassIdSession {
         Log.d(TAG, "Requesting registration session from server ...")
 
@@ -92,7 +90,7 @@ class PassIdApi(url: String) {
     }
 
     /* API: passID.login */
-    @Throws(PassIdApiError::class, TimeoutException::class, IOException::class)
+    @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
     suspend fun login(uid: UserId, cid: CID, csigs: List<ByteArray>) : PassIdSession {
         Log.d(TAG, "Requesting login session from server ...")
 
@@ -114,7 +112,7 @@ class PassIdApi(url: String) {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-    @Throws(PassIdApiError::class, TimeoutException::class, IOException::class)
+    @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
     private suspend inline fun transceive(method: String, params: RpcParams = RpcNoParams): Map<String, Any>{
         return withContext(Dispatchers.IO) {
             val resp: RpcResponse = rpc.write(method, params, timeout).get()
