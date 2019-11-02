@@ -6,16 +6,31 @@
     <PreferenceCategory
         app:iconSpaceReserved="false"
         app:key="server_category"
-        app:title="Server settings">
+        app:title="@string/setting_group_server">
 
         <EditTextPreference
-            app:iconSpaceReserved="false"
-            android:inputType="textUri"
-            android:key="@string/setting_server_url"
-            android:selectAllOnFocus="true"
             android:imeOptions="actionDone"
+
+            android:key="@string/pf_server_url"
             android:positiveButtonText="@string/btn_text_save"
-            android:title="Server URL" />
+            android:selectAllOnFocus="true"
+            android:title="@string/setting_label_server_url"
+
+            android:inputType="phone"
+            app:iconSpaceReserved="false" />
+
+        <EditTextPreference
+            android:key="@string/pf_connection_timeout"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/setting_label_connection_timeout"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:gravity="top|left"
+            android:key="@string/pf_btn_test_connection"
+            android:summary="@string/setting_desc_test_connection"
+            android:title="@string/setting_label_test_connection" />
     </PreferenceCategory>
 
 </PreferenceScreen>
