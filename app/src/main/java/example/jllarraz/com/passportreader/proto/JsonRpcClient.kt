@@ -3,11 +3,14 @@ package example.jllarraz.com.passportreader.proto
 import android.util.Log
 import info.laht.yajrpc.*
 import info.laht.yajrpc.net.RpcClient
+import kotlinx.android.synthetic.main.layout_progress_bar.view.*
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.Buffer
 import java.io.IOException
+import java.net.SocketException
+import java.net.SocketTimeoutException
 import java.util.*
 import java.util.concurrent.*
 
@@ -16,7 +19,10 @@ import java.util.concurrent.*
 typealias RpcCallback = (RpcResponse?, IOException?) -> Unit
 
 typealias RpcConnectionError = IOException
-class RpcConnectionTimeout(e: String) : RpcConnectionError(e)
+class RpcConnectionTimeout: RpcConnectionError {
+    constructor(e: Throwable) : super(e)
+    constructor(msg: String) : super(msg)
+}
 
 
 class JsonRpcClient  constructor(
@@ -24,6 +30,7 @@ class JsonRpcClient  constructor(
     var url: String = ""
 ) : RpcClient {
 
+    var maxRetry = 5
     var userAgent: String? = null
     var origin: String? = null
 
@@ -39,7 +46,7 @@ class JsonRpcClient  constructor(
 
     @Throws(TimeoutException::class)
     override fun write(methodName: String, params: RpcParams, timeout: Long): Future<RpcResponse> {
-        fun task(): () -> RpcResponse = {
+        fun task(): () -> RpcResponse = sendtask@{
             var reqid = ""
             try {
                 var response: RpcResponse? = null
@@ -56,16 +63,35 @@ class JsonRpcClient  constructor(
                     }
                 }
 
+                Log.i(TAG, "Sending new RPC command '$methodName' to '$url'. rpcId=${request.id}")
                 val call = send(request)
-                if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
-                    call.cancel()
-                    throw RpcConnectionTimeout("Timeout!")
-                }
-                else if(ioError != null) {
-                    throw RpcConnectionError(ioError)
-                }
+                var retryCount = maxRetry
+                do {
+                    if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
+                        call.cancel()
+                        Log.e(TAG,"Failed to send RPC request. Connection timeout! rpcId=${request.id}")
+                        throw RpcConnectionTimeout("Timeout!")
+                    }
+                    else if(ioError != null) {
+                        if(ioError is SocketException && ioError?.message!!.contains("Socket closed", true)) {
+                            Log.w(TAG, "Encountered socket error '${ioError?.message}', retrying ... $retryCount")
+                            resendCall(call)
+                            continue
+                        }
+                        else if(ioError is SocketTimeoutException) {
+                            Log.e(TAG,"Failed to send RPC request. Connection timeout! rpcId=${request.id}")
+                            throw RpcConnectionTimeout(ioError!!)
+                        }
+                        Log.e(TAG,"Failed to send RPC request, rpcId=${request.id}\n  error=${ioError?.message}")
+                        throw RpcConnectionError(ioError)
+                    }
 
-                response!!
+                    Log.i(TAG, "Sending succeeded. rpcId=${response?.id.toString()}")
+                    return@sendtask response!!
+                }
+                while(retryCount --> 0)
+                Log.e(TAG,"Send retry maxed out, rpcId=${request.id}")
+                throw RpcConnectionError("Send retry maxed out")
             }
             finally {
                 callbacks.remove(reqid)
@@ -93,19 +119,25 @@ class JsonRpcClient  constructor(
     }
 
     private fun send(request: RpcRequestOut): Call {
-        return post(request, object: Callback {
-            override fun onResponse(call: Call, resp: Response) {
-                val rpcResp = resp.toRpcResponse()
-                call(rpcResp.id, rpcResp)
+        return post(request, sendCallback)
+    }
+
+    private fun resendCall(call: Call) {
+        call.clone().enqueue(sendCallback)
+    }
+
+    private val sendCallback = object: Callback {
+        override fun onResponse(call: Call, resp: Response) {
+            val rpcResp = resp.toRpcResponse()
+            call(rpcResp.id, rpcResp)
+        }
+        override fun onFailure(call: Call, e: IOException) {
+            val r = call.request()
+            if(!e.message.equals("Canceled", ignoreCase = true)) {
+                val req = call.request().toRpcRequest()
+                call(req.id, null, e)
             }
-            override fun onFailure(call: Call, e: IOException) {
-                val r = call.request()
-                if(!e.message.equals("Canceled", ignoreCase = true)) {
-                    val req = call.request().toRpcRequest()
-                    call(req.id, null, e)
-                }
-            }
-        })
+        }
     }
 
     override fun close() {
