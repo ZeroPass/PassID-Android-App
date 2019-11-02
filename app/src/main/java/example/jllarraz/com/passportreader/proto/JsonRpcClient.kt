@@ -41,7 +41,6 @@ class JsonRpcClient  constructor(
         send(RpcRequestOut(methodName, params).apply {
             id = UUID.randomUUID().toString()
         })
-        var zz: Map<String, String>
     }
 
     @Throws(TimeoutException::class)
@@ -132,7 +131,6 @@ class JsonRpcClient  constructor(
             call(rpcResp.id, rpcResp)
         }
         override fun onFailure(call: Call, e: IOException) {
-            val r = call.request()
             if(!e.message.equals("Canceled", ignoreCase = true)) {
                 val req = call.request().toRpcRequest()
                 call(req.id, null, e)
