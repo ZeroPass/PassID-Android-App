@@ -11,11 +11,16 @@ import example.jllarraz.com.passportreader.proto.PassIdApi
 import example.jllarraz.com.passportreader.ui.fragments.SettingsFragment
 import kotlinx.android.synthetic.main.fragment_selection.*
 import kotlinx.android.synthetic.main.layout_progress_bar.view.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlin.coroutines.CoroutineContext
 
-class SettingsActivity : AppCompatActivity(), Preference.OnPreferenceClickListener {
+class SettingsActivity : AppCompatActivity(), Preference.OnPreferenceClickListener , CoroutineScope {
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
+
+    private var job: Job = Job()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
@@ -26,6 +31,11 @@ class SettingsActivity : AppCompatActivity(), Preference.OnPreferenceClickListen
                     .replace(R.id.settings_container_content, SettingsFragment(), "SettingsFragmet")
                     .commit()
         }
+    }
+
+    override fun onDestroy() {
+        cancel()
+        super.onDestroy()
     }
 
     override fun onPreferenceClick(preference: Preference?): Boolean {
@@ -40,11 +50,11 @@ class SettingsActivity : AppCompatActivity(), Preference.OnPreferenceClickListen
         Toast.makeText(applicationContext, msg, duration).show();
     }
 
-    fun hideProgressBar() {
+    private fun hideProgressBar() {
         llProgressBar?.visibility = View.GONE
     }
 
-    fun showProgressBar(msg: String = "") {
+    private fun showProgressBar(msg: String = "") {
         var msg = msg
         if (msg.isEmpty()) {
             msg = getString(R.string.label_please_wait)
@@ -59,7 +69,7 @@ class SettingsActivity : AppCompatActivity(), Preference.OnPreferenceClickListen
         val timeout = pm.getString(getString(R.string.pf_connection_timeout), SettingsFragment.DEFAULT_TIMEOUT)?.toLong()!!
 
         showProgressBar("Trying to connect to server ...")
-        GlobalScope.launch(Dispatchers.Main) {
+        launch {
             try {
                 val api = PassIdApi(url)
                 api.timeout = timeout
@@ -67,10 +77,12 @@ class SettingsActivity : AppCompatActivity(), Preference.OnPreferenceClickListen
                 showToast("Connection succeeded")
             }
             catch (e: Throwable){
+                if(e is CancellationException) {
+                    throw e
+                }
                 showToast("Connection failed")
             }
-
-            hideProgressBar()
+            hideProgressBar() // Note: Must not be called when rethrowing CancellationException, can lead to fatal error
         }
     }
 }
