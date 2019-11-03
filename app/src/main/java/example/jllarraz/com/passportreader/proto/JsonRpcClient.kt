@@ -1,9 +1,9 @@
 package example.jllarraz.com.passportreader.proto
 
+import android.os.SystemClock
 import android.util.Log
 import info.laht.yajrpc.*
 import info.laht.yajrpc.net.RpcClient
-import kotlinx.android.synthetic.main.layout_progress_bar.view.*
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -13,7 +13,7 @@ import java.net.SocketException
 import java.net.SocketTimeoutException
 import java.util.*
 import java.util.concurrent.*
-
+import kotlin.math.max
 
 
 typealias RpcCallback = (RpcResponse?, IOException?) -> Unit
@@ -62,11 +62,18 @@ class JsonRpcClient  constructor(
                     }
                 }
 
+                // Send request
                 Log.i(TAG, "Sending new RPC command '$methodName' to '$url'. rpcId=${request.id}")
                 val call = send(request)
+
                 var retryCount = maxRetry
+                val timer = TimeoutCountDown(timeout)
                 do {
-                    if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
+                    if(Thread.currentThread().isInterrupted){
+                        throw InterruptedException()
+                    }
+
+                    if (!latch.await(timer.millsToFinish(), TimeUnit.MILLISECONDS)) {
                         call.cancel()
                         Log.e(TAG,"Failed to send RPC request. Connection timeout! rpcId=${request.id}")
                         throw RpcConnectionTimeout("Timeout!")
@@ -85,6 +92,7 @@ class JsonRpcClient  constructor(
                         throw RpcConnectionError(ioError)
                     }
 
+                    // Return received rpc response
                     Log.i(TAG, "Sending succeeded. rpcId=${response?.id.toString()}")
                     return@sendtask response!!
                 }
@@ -161,9 +169,18 @@ class JsonRpcClient  constructor(
         }
     }
 
+
     companion object {
         private val TAG = JsonRpcClient::class.java.simpleName
         private val JSON = "application/json; charset=utf-8".toMediaType()
+
+        class TimeoutCountDown(millisTimeout: Long) {
+            private val endTime: Long = SystemClock.elapsedRealtime() + millisTimeout // Sets start time at construction
+
+            fun millsToFinish() : Long {
+                return max(endTime - SystemClock.elapsedRealtime(), 0)
+            }
+        }
 
         private fun Request.Builder.addOrigin(origin: String?): Request.Builder {
             if (origin != null) {
