@@ -71,7 +71,7 @@ class PassIdProtoChallenge(challenge: ByteArray) : ProtoByteObject(challenge) {
     fun getChunks() : List<ByteArray> {
         val numChunks = data.size / CHUNK_SIZE
         val ccs = ArrayList<ByteArray>()
-        for(i in 0..numChunks){
+        for(i in 0 until numChunks){
             ccs.add(getChunk(i))
         }
         return ccs
@@ -79,8 +79,8 @@ class PassIdProtoChallenge(challenge: ByteArray) : ProtoByteObject(challenge) {
 
     private fun getChunk(chunkNum: Int) : ByteArray {
         return data.copyOfRange(
-                chunkNum * CHUNK_SIZE,
-                (chunkNum * CHUNK_SIZE) + CHUNK_SIZE
+            chunkNum * CHUNK_SIZE,
+            (chunkNum * CHUNK_SIZE) + CHUNK_SIZE
         )
     }
 
