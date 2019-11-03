@@ -1,18 +1,16 @@
 package example.jllarraz.com.passportreader.data
 
-import android.graphics.Bitmap
 import android.os.Parcel
 import android.os.Parcelable
 
-import org.jmrtd.FeatureStatus
-import org.jmrtd.VerificationStatus
+import org.jmrtd.lds.LDSFile
 import org.jmrtd.lds.SODFile
 import org.jmrtd.lds.icao.DG1File
 import org.jmrtd.lds.icao.DG14File
 import org.jmrtd.lds.icao.DG15File
+import java.io.ByteArrayInputStream
 
 import java.util.ArrayList
-import java.util.HashMap
 
 class PassIdData : Parcelable {
 
@@ -24,20 +22,21 @@ class PassIdData : Parcelable {
 
 
     constructor(`in`: Parcel) {
+
         if (`in`.readInt() == 1) {
-            sodFile = `in`.readSerializable() as SODFile
+            sodFile = `in`.readDGFile{ SODFile(it) }
         }
 
         if (`in`.readInt() == 1) {
-            dg1File = `in`.readSerializable() as DG1File
+            dg1File = `in`.readDGFile{ DG1File(it) }
         }
 
         if (`in`.readInt() == 1) {
-            dg14File = `in`.readSerializable() as DG14File
+            dg14File = `in`.readDGFile{ DG14File(it) }
         }
 
         if (`in`.readInt() == 1) {
-            dg15File = `in`.readSerializable() as DG15File
+            dg15File = `in`.readDGFile{ DG15File(it) }
         }
 
         if (`in`.readInt() == 1) {
@@ -54,35 +53,48 @@ class PassIdData : Parcelable {
         return 0
     }
 
-    override fun writeToParcel(dest: Parcel, flags: Int) {
+    override fun writeToParcel(out: Parcel, flags: Int) {
 
-        dest.writeInt(if (sodFile != null) 1 else 0)
+        out.writeInt(if (sodFile != null) 1 else 0)
         if (sodFile != null) {
-            dest.writeSerializable(sodFile)
+            out.writeDGFile(sodFile!!)
         }
 
-        dest.writeInt(if (dg1File != null) 1 else 0)
+        out.writeInt(if (dg1File != null) 1 else 0)
         if (dg1File != null) {
-            dest.writeSerializable(dg1File)
+            out.writeDGFile(dg1File!!)
         }
 
-        dest.writeInt(if (dg14File != null) 1 else 0)
+        out.writeInt(if (dg14File != null) 1 else 0)
         if (dg14File != null) {
-            dest.writeSerializable(dg14File)
+            out.writeDGFile(dg14File!!)
         }
 
-        dest.writeInt(if (dg15File != null) 1 else 0)
+        out.writeInt(if (dg15File != null) 1 else 0)
         if (dg15File != null) {
-            dest.writeSerializable(dg15File)
+            out.writeDGFile(dg15File!!)
         }
 
-        dest.writeInt(if (ccSignatures != null) 1 else 0)
+        out.writeInt(if (ccSignatures != null) 1 else 0)
         if (ccSignatures != null) {
-            dest.writeList(ccSignatures)
+            out.writeList(ccSignatures)
         }
     }
 
     companion object {
+        private fun Parcel.writeDGFile(dg: LDSFile) {
+            // Note: dest.writeSerializable(dg) shouldn't be used here
+            //      because some files are not properly serialized
+            writeByteArray(dg.encoded)
+        }
+
+        private fun<T> Parcel.readDGFile(factory: (ByteArrayInputStream) -> T) : T {
+            // Note: dest.readSerializable() as T shouldn't be used here
+            //       because some files are not properly deserialized.
+            //       For example SODFile is missing signedData
+            val raw = createByteArray()
+            return factory(raw!!.inputStream())
+        }
 
         @JvmField
         val CREATOR: Parcelable.Creator<*> = object : Parcelable.Creator<PassIdData> {
