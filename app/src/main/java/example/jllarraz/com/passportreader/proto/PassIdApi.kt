@@ -14,13 +14,17 @@ import org.jmrtd.lds.icao.DG14File
 import org.jmrtd.lds.icao.DG15File
 
 import example.jllarraz.com.passportreader.utils.StringUtils.b64Encode
+import okhttp3.internal.lockAndWaitNanos
+import java.io.Closeable
 import java.util.*
+import java.util.concurrent.Future
 
 
 data class PassIdSession(val uid: UserId, val key: SessionKey, val expires: Date)
 data class PassIdApiError(val code: Int, override val message: String, val data: Any? = null): Exception(message)
 
-class PassIdApi(url: String) {
+class PassIdApi(url: String) : Closeable {
+
     private lateinit  var rpc: JsonRpcClient
     var timeout: Long = 2000
     var url: String
@@ -35,6 +39,11 @@ class PassIdApi(url: String) {
         val httpClient = OkHttpClient().newBuilder().build()
         this.rpc = JsonRpcClient(httpClient, url)
     }
+
+    override fun close() {
+        this.rpc.close()
+    }
+
 
 /******************************************** API CALLS *****************************************************/
 /************************************************************************************************************/
@@ -115,7 +124,7 @@ class PassIdApi(url: String) {
     @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
     private suspend inline fun transceive(method: String, params: RpcParams = RpcNoParams): Map<String, Any>{
         return withContext(Dispatchers.IO) {
-            val resp: RpcResponse = rpc.write(method, params, timeout).get()
+            val resp: RpcResponse = rpc.write(method, params, timeout).await()
             if (resp.hasError) {
                 throw resp.error!!.toPassIdApiError()
             }
@@ -155,6 +164,19 @@ class PassIdApi(url: String) {
             val data = field.get(this)
 
             return PassIdApiError(code, msg, data)
+        }
+
+        private suspend fun Future<RpcResponse>.await() : RpcResponse {
+            return withContext(Dispatchers.IO) {
+                while(!isDone){
+                    lockAndWaitNanos(100000000)
+                    if(!isActive) {
+                        cancel(true) // stop the underlying task because parent task was canceled
+                    }
+                    yield()
+                }
+                get()
+            }
         }
     }
 }
