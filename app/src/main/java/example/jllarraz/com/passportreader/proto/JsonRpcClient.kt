@@ -18,7 +18,11 @@ import kotlin.math.max
 
 typealias RpcCallback = (RpcResponse?, IOException?) -> Unit
 
-typealias RpcConnectionError = IOException
+open class RpcConnectionError : IOException {
+    constructor(e: Throwable) : super(e)
+    constructor(msg: String) : super(msg)
+}
+
 class RpcConnectionTimeout: RpcConnectionError {
     constructor(e: Throwable) : super(e)
     constructor(msg: String) : super(msg)
@@ -89,7 +93,7 @@ class JsonRpcClient  constructor(
                             throw RpcConnectionTimeout(ioError!!)
                         }
                         Log.e(TAG,"Failed to send RPC request, rpcId=${request.id}\n  error=${ioError?.message}")
-                        throw RpcConnectionError(ioError)
+                        throw RpcConnectionError(ioError!!)
                     }
 
                     // Return received rpc response
@@ -111,14 +115,14 @@ class JsonRpcClient  constructor(
     private fun post(rpcReq: RpcRequestOut, callback: Callback): Call {
         val body = rpcReq.toRequestBody()
         val req = Request.Builder()
-                .url(url)
-                .header("Accept", "application/json")
-                .addHeader("Content-type","application/json")
-                .addUserAgent(userAgent)
-                .addOrigin(origin)
-                .addContentLength(body.contentLength())
-                .post(body)
-                .build()
+            .url(url)
+            .header("Accept", "application/json")
+            .addHeader("Content-type","application/json")
+            .addUserAgent(userAgent)
+            .addOrigin(origin)
+            .addContentLength(body.contentLength())
+            .post(body)
+            .build()
 
         val call = client.newCall(req)
         call.enqueue(callback)
