@@ -82,7 +82,7 @@ class PassIdApi(url: String) : Closeable {
         val params = RpcParams.mapParams(listOfNotNull(
             "dg15" to b64Encode(dg15.encoded),
             "sod" to b64Encode(sod.encoded),
-            "cid" to cid.toNumber(),
+            "cid" to cid.hex(),
             "csigs" to csigs.map{ b64Encode(it) },
             if (dg14 != null) "dg14" to b64Encode(dg14.encoded) else null
         ).toMap())
@@ -105,7 +105,7 @@ class PassIdApi(url: String) : Closeable {
 
         val params = RpcParams.mapParams(mapOf(
                 "uid" to uid.toBase64(),
-                "cid" to cid.toNumber(),
+                "cid" to cid.hex(),
                 "csigs" to csigs.map{ b64Encode(it) }
         ))
 
