@@ -23,14 +23,20 @@ class SettingsActivity : AppCompatActivity(), Preference.OnPreferenceClickListen
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_settings)
 
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        setContentView(R.layout.activity_settings)
         if (null == savedInstanceState) {
             supportFragmentManager
                     .beginTransaction()
                     .replace(R.id.settings_container_content, SettingsFragment(), "SettingsFragmet")
                     .commit()
         }
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressed()
+        return true
     }
 
     override fun onDestroy() {
