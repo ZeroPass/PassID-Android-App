@@ -6,4 +6,5 @@ object IntentData {
     const val KEY_PASSPORT = "KEY_PASSPORT"
     const val KEY_IMAGE    = "KEY_IMAGE"
     const val KEY_PASSID_CHALLENGE = "KEY_PASSID_CHALLENGE"
+    const val KEY_PASSID_DATA = "KEY_PASSID_DATA"
 }

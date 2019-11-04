@@ -45,9 +45,6 @@ class SelectionFragment : androidx.fragment.app.Fragment(), Validator.Validation
                               savedInstanceState: Bundle?): View? {
 
         val inflatedView = inflater.inflate(R.layout.fragment_selection, container, false)
-
-
-
         return inflatedView
     }
 
@@ -59,6 +56,7 @@ class SelectionFragment : androidx.fragment.app.Fragment(), Validator.Validation
         appCompatEditTextDocumentNumber = view.findViewById(R.id.documentNumber)
         appCompatEditTextDocumentExpiration = view.findViewById(R.id.documentExpiration)
         appCompatEditTextDateOfBirth = view.findViewById(R.id.documentDateOfBirth)
+        
         buttonReadNFC = view.findViewById(R.id.buttonReadNfc)
 
         radioGroup!!.setOnCheckedChangeListener { group, checkedId ->

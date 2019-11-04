@@ -33,6 +33,7 @@ import example.jllarraz.com.passportreader.R
 import example.jllarraz.com.passportreader.common.IntentData
 import example.jllarraz.com.passportreader.data.PassIdData
 import example.jllarraz.com.passportreader.data.Passport
+import example.jllarraz.com.passportreader.proto.PassIdProtoChallenge
 import example.jllarraz.com.passportreader.utils.NFCDocumentTag
 import io.reactivex.disposables.CompositeDisposable
 
@@ -40,7 +41,7 @@ import io.reactivex.disposables.CompositeDisposable
 class NfcFragment : androidx.fragment.app.Fragment() {
 
     private var mrzInfo: MRZInfo? = null
-    private var passIdChallenge: ByteArray? = null
+    private var passIdChallenge: PassIdProtoChallenge? = null
     private var nfcFragmentListener: NfcFragmentListener? = null
     private var textViewPassportNumber: TextView? = null
     private var textViewDateOfBirth: TextView? = null
@@ -66,7 +67,7 @@ class NfcFragment : androidx.fragment.app.Fragment() {
             return
         }
         else if(arguments.containsKey(IntentData.KEY_PASSID_CHALLENGE)) {
-            passIdChallenge = arguments.getSerializable(IntentData.KEY_PASSID_CHALLENGE) as ByteArray
+            passIdChallenge = arguments.getParcelable(IntentData.KEY_PASSID_CHALLENGE)
         }
 
         mrzInfo = arguments.getSerializable(IntentData.KEY_MRZ_INFO) as MRZInfo
@@ -97,24 +98,24 @@ class NfcFragment : androidx.fragment.app.Fragment() {
 
             }
 
-            override fun onPassIdDataRead(passIdData: PassIdData?) {
+            override fun onPassIdDataRead(passIdData: PassIdData) {
                 this@NfcFragment.onPassIdDataRead(passIdData)
             }
 
             override fun onAccessDeniedException(exception: AccessDeniedException) {
-                Toast.makeText(context, getString(R.string.warning_authentication_failed), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, getString(R.string.warning_authentication_failed), Toast.LENGTH_LONG).show()
                 exception.printStackTrace()
                 this@NfcFragment.onCardException(exception)
 
             }
 
             override fun onBACDeniedException(exception: BACDeniedException) {
-                Toast.makeText(context, exception.toString(), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, exception.toString(), Toast.LENGTH_LONG).show()
                 this@NfcFragment.onCardException(exception)
             }
 
             override fun onPACEException(exception: PACEException) {
-                Toast.makeText(context, exception.toString(), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, exception.toString(), Toast.LENGTH_LONG).show()
                 this@NfcFragment.onCardException(exception)
             }
 
@@ -122,17 +123,17 @@ class NfcFragment : androidx.fragment.app.Fragment() {
                 val sw = exception.sw.toShort()
                 when (sw) {
                     ISO7816.SW_CLA_NOT_SUPPORTED -> {
-                        Toast.makeText(context, getString(R.string.warning_cla_not_supported), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, getString(R.string.warning_cla_not_supported), Toast.LENGTH_LONG).show()
                     }
                     else -> {
-                        Toast.makeText(context, exception.toString(), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, exception.toString(), Toast.LENGTH_LONG).show()
                     }
                 }
                 this@NfcFragment.onCardException(exception)
             }
 
             override fun onGeneralException(exception: Exception?) {
-                Toast.makeText(context, exception!!.toString(), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, exception!!.toString(), Toast.LENGTH_LONG).show()
                 this@NfcFragment.onCardException(exception)
             }
         })
@@ -208,10 +209,10 @@ class NfcFragment : androidx.fragment.app.Fragment() {
         }
     }
 
-    protected fun onPassIdDataRead(passIdData: PassIdData?) {
+    private fun onPassIdDataRead(passIdData: PassIdData) {
         mHandler.post {
             if (nfcFragmentListener != null) {
-                nfcFragmentListener!!.onPassIdDataRead(passIdData )
+                nfcFragmentListener!!.onPassIdDataRead(passIdData)
             }
         }
     }
@@ -220,7 +221,7 @@ class NfcFragment : androidx.fragment.app.Fragment() {
         fun onEnableNfc()
         fun onDisableNfc()
         fun onPassportRead(passport: Passport?)
-        fun onPassIdDataRead(passIdData: PassIdData?)
+        fun onPassIdDataRead(passIdData: PassIdData)
         fun onCardException(cardException: Exception?)
     }
 
@@ -233,12 +234,12 @@ class NfcFragment : androidx.fragment.app.Fragment() {
             Security.addProvider(BouncyCastleProvider())
         }
 
-        fun newInstance(mrzInfo: MRZInfo, passIdChallenge: ByteArray? = null): NfcFragment {
+        fun newInstance(mrzInfo: MRZInfo, passIdChallenge: PassIdProtoChallenge? = null): NfcFragment {
             val myFragment = NfcFragment()
             val args = Bundle()
             args.putSerializable(IntentData.KEY_MRZ_INFO, mrzInfo)
             if (passIdChallenge != null) {
-                args.putSerializable(IntentData.KEY_PASSID_CHALLENGE, passIdChallenge)
+                args.putParcelable(IntentData.KEY_PASSID_CHALLENGE, passIdChallenge)
             }
             myFragment.arguments = args
             return myFragment

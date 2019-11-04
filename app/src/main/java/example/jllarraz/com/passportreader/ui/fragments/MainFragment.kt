@@ -29,19 +29,19 @@ class MainFragment : androidx.fragment.app.Fragment() {
         btnRegister = view.findViewById(R.id.btnRegister)
         btnRegister!!.setOnClickListener {
             val intent = Intent(SelectionActivity.ACTION_REGISTER)
-            startActivity(intent);
+            startActivity(intent)
         }
 
         btnLogin = view.findViewById(R.id.btnLogin)
         btnLogin!!.setOnClickListener {
             val intent = Intent(SelectionActivity.ACTION_LOGIN)
-            startActivity(intent);
+            startActivity(intent)
         }
 
         btnViewPassport = view.findViewById(R.id.btnViewPassport)
         btnViewPassport!!.setOnClickListener {
             val intent = Intent(SelectionActivity.ACTION_VIEW_PASSPORT)
-            startActivity(intent);
+            startActivity(intent)
         }
     }
 }

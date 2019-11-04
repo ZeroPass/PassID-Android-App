@@ -1,6 +1,7 @@
 package example.jllarraz.com.passportreader.utils
 
 import android.util.Log
+import example.jllarraz.com.passportreader.proto.PassIdProtoChallenge
 
 import net.sf.scuba.smartcards.CardServiceException
 
@@ -29,8 +30,9 @@ import org.jmrtd.lds.icao.MRZInfo
 import org.jmrtd.protocol.BACResult
 import org.jmrtd.protocol.PACEResult
 
+class PassIdPassportNFCError(msg: String): IOException(msg)
 
-class PassIdPassportNFC @Throws(GeneralSecurityException::class)
+class PassIdPassportNFC @Throws(GeneralSecurityException::class, PassIdPassportNFCError::class)
 private constructor() {
 
     /**
@@ -83,8 +85,8 @@ private constructor() {
      * @throws CardServiceException on error
      * @throws GeneralSecurityException if certain security primitives are not supported
      */
-    @Throws(CardServiceException::class, GeneralSecurityException::class)
-    constructor(ps: PassportService?, mrzInfo: MRZInfo, challange: ByteArray?) : this() {
+    @Throws(CardServiceException::class, GeneralSecurityException::class, PassIdPassportNFCError::class)
+    constructor(ps: PassportService?, mrzInfo: MRZInfo, challange: PassIdProtoChallenge?) : this() {
         requireNotNull(ps) { "Service cannot be null" }
 
         this.service = ps
@@ -227,17 +229,10 @@ private constructor() {
         signChallenge(challange)
     }
 
-    private fun signChallenge(challenge: ByteArray?) {
+    private fun signChallenge(challenge: PassIdProtoChallenge?) {
         if (challenge != null) {
-            val chunkSize = 8
-            if (challenge.size % chunkSize != 0) {
-                // TODO: throw error
-            }
-
-            val numChunks = challenge.size / chunkSize
             val ccsigs = ArrayList<ByteArray>()
-            for(i in challenge.indices step chunkSize) {
-                val cc = challenge.copyOfRange(i, i + chunkSize)
+            for(cc in challenge.getChunks()) {
                 val aaResult = (service as PassportService)
                         .doAA(dg15File!!.publicKey, sodFile!!.digestAlgorithm, sodFile!!.signerInfoDigestAlgorithm, cc)
 

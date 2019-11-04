@@ -22,6 +22,7 @@ import example.jllarraz.com.passportreader.ui.fragments.NfcFragment
 import example.jllarraz.com.passportreader.ui.fragments.PassportDetailsFragment
 import example.jllarraz.com.passportreader.ui.fragments.PassportPhotoFragment
 import example.jllarraz.com.passportreader.data.PassIdData
+import example.jllarraz.com.passportreader.proto.PassIdProtoChallenge
 
 
 class NfcActivity : androidx.fragment.app.FragmentActivity(), NfcFragment.NfcFragmentListener, PassportDetailsFragment.PassportDetailsFragmentListener, PassportPhotoFragment.PassportPhotoFragmentListener {
@@ -42,13 +43,13 @@ class NfcActivity : androidx.fragment.app.FragmentActivity(), NfcFragment.NfcFra
         mrzInfo = intent.getSerializableExtra(IntentData.KEY_MRZ_INFO) as MRZInfo
         nfcAdapter = NfcAdapter.getDefaultAdapter(this)
 
-        var passIdChallenge: ByteArray? = null
-        if(intent.hasExtra(IntentData.KEY_PASSID_CHALLENGE)) {
-            passIdChallenge = intent.getSerializableExtra(IntentData.KEY_PASSID_CHALLENGE) as ByteArray
+        var passIdChallenge: PassIdProtoChallenge? = null
+        if(intent.extras != null) {
+            passIdChallenge = intent.extras!!.getParcelable(IntentData.KEY_PASSID_CHALLENGE)
         }
 
         if (nfcAdapter == null) {
-            Toast.makeText(this, getString(R.string.warning_no_nfc), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.warning_no_nfc), Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -80,6 +81,7 @@ class NfcActivity : androidx.fragment.app.FragmentActivity(), NfcFragment.NfcFra
             // drop NFC events
             handleIntent(intent)
         }
+        //super.onNewIntent(intent)
     }
 
     protected fun handleIntent(intent: Intent) {
@@ -112,14 +114,13 @@ class NfcActivity : androidx.fragment.app.FragmentActivity(), NfcFragment.NfcFra
         nfcAdapter.disableForegroundDispatch(this)
     }
 
-    override fun onPassIdDataRead(passIdData: PassIdData?) {
-        //TODO: Send data back to server
-        Toast.makeText(this, "Data needed for passId successfully read from passport", Toast.LENGTH_LONG).show()
-        val i = Intent(this, MainActivity::class.java)
-        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    override fun onPassIdDataRead(passIdData: PassIdData) {
+        val data = Intent();
+        data.putExtra(IntentData.KEY_PASSID_DATA, passIdData)
+        data.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        data.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        setResult(RESULT_OK, data)
         finish()
-        startActivity(i)
     }
 
     override fun onPassportRead(passport: Passport?) {
@@ -127,12 +128,12 @@ class NfcActivity : androidx.fragment.app.FragmentActivity(), NfcFragment.NfcFra
     }
 
     override fun onCardException(cardException: Exception?) {
-        //Toast.makeText(this, cardException.toString(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, cardException.toString(), Toast.LENGTH_SHORT).show();
         //onBackPressed();
     }
 
     private fun showWirelessSettings() {
-        Toast.makeText(this, getString(R.string.warning_enable_nfc), Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.warning_enable_nfc), Toast.LENGTH_LONG).show()
         val intent = Intent(Settings.ACTION_WIRELESS_SETTINGS)
         startActivity(intent)
     }

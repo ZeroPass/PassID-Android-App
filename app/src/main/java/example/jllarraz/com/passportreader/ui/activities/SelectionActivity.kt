@@ -19,31 +19,89 @@ package example.jllarraz.com.passportreader.ui.activities
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.view.MenuItem
-import androidx.fragment.app.Fragment
-import androidx.appcompat.app.AppCompatActivity
-
+import android.util.Log
 
 import org.jmrtd.lds.icao.MRZInfo
 
 import example.jllarraz.com.passportreader.R
 import example.jllarraz.com.passportreader.common.IntentData
 import example.jllarraz.com.passportreader.ui.fragments.SelectionFragment
+import kotlinx.coroutines.*
+import example.jllarraz.com.passportreader.data.PassIdData
+import android.view.Menu
+import example.jllarraz.com.passportreader.proto.*
+import example.jllarraz.com.passportreader.ui.fragments.SuccessFragment
 
-class SelectionActivity : AppCompatActivity(), SelectionFragment.SelectionFragmentListener {
+
+class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFragmentListener {
+
+    private var nfcIntentExtras: Bundle? = null
+    private var dPassIdData:  CompletableDeferred<PassIdData>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTitle(R.string.selection_activity_title)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        setContentView(R.layout.activity_camera)
+
         if (null == savedInstanceState) {
             supportFragmentManager.beginTransaction()
-                    .replace(R.id.container, SelectionFragment(), TAG_SELECTION_FRAGMENT)
-                    .commit()
+                .replace(R.id.container, SelectionFragment(), TAG_SELECTION_FRAGMENT)
+                .commit()
+        }
+
+        handleAction()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val res = super.onCreateOptionsMenu(menu)
+        if(intent.action == ACTION_VIEW_PASSPORT){
+            hideSettingsMenu()
+        }
+        return res
+    }
+
+    private fun handleAction() {
+        when {
+            intent.action == ACTION_REGISTER -> {
+                setTitle(R.string.selection_activity_register)
+                register()
+            }
+            intent.action == ACTION_LOGIN -> {
+                setTitle(R.string.selection_activity_login)
+                login()
+            }
+            intent.action == ACTION_VIEW_PASSPORT -> {
+                setTitle(R.string.selection_activity_view)
+            }
+            else ->{
+                Log.w(TAG, "Unknown action '${intent.action}'")
+                onBackPressed()
+            }
         }
     }
 
+    /**
+     * Return data needed for passID protocol.
+     * What it does is sets challenge to be signed by passport for nfc intent
+     * then waits for nfc intent to return passID data.
+     * */
+    override suspend fun getPassIdData(challenge: PassIdProtoChallenge) : PassIdData {
+        nfcIntentExtras = Bundle()
+        nfcIntentExtras!!.putParcelable(IntentData.KEY_PASSID_CHALLENGE, challenge)
+
+        dPassIdData = CompletableDeferred<PassIdData>()
+        dPassIdData!!.await()
+        val data = dPassIdData!!.getCompleted()
+
+        dPassIdData = null
+        return data
+    }
+
+    override fun onLoginSucceed(uid: UserId) {
+        showSuccessScreen("Login succeed", uid)
+    }
+
+    override fun onRegisterSucceed(uid: UserId) {
+        showSuccessScreen("Registration succeed", uid)
+    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         var data = data
@@ -75,28 +133,32 @@ class SelectionActivity : AppCompatActivity(), SelectionFragment.SelectionFragme
                 if (fragmentByTag is SelectionFragment) {
                     fragmentByTag.selectManualToggle()
                 }
+
+                when (resultCode) {
+                    Activity.RESULT_OK -> {
+                        if(dPassIdData != null) {
+                            dPassIdData!!.complete(
+                                data.getParcelableExtra<PassIdData>(
+                                    IntentData.KEY_PASSID_DATA)!!
+                            )
+                        }
+                    }
+                    Activity.RESULT_CANCELED -> {
+                        onBackPressed()
+                    }
+                }
             }
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
-        return true
-    }
-
-    private fun test() {
-        //Method to test NFC without rely into the Camera
-        val TEST_LINE_1 = "P<IRLOSULLIVAN<<LAUREN<<<<<<<<<<<<<<<<<<<<<<"
-        val TEST_LINE_2 = "XN50042162IRL8805049F2309154<<<<<<<<<<<<<<<6"
-
-        val mrzInfo = MRZInfo(TEST_LINE_1 + "\n" + TEST_LINE_2)
-        onPassportRead(mrzInfo)
-    }
-
     override fun onPassportRead(mrzInfo: MRZInfo) {
         val intent = Intent(this, NfcActivity::class.java)
+
         intent.putExtra(IntentData.KEY_MRZ_INFO, mrzInfo)
+        if(nfcIntentExtras != null) {
+            intent.putExtras(nfcIntentExtras!!)
+        }
         startActivityForResult(intent, REQUEST_NFC)
     }
 
@@ -105,23 +167,13 @@ class SelectionActivity : AppCompatActivity(), SelectionFragment.SelectionFragme
         startActivityForResult(intent, REQUEST_MRZ)
     }
 
-    private fun hideProgressBar() {
-        llProgressBar?.visibility = View.GONE
+    private fun showSuccessScreen(title: String, uid: UserId) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.container, SuccessFragment.newInstance(title, uid))
+            .commit()
     }
-
-    private fun showProgressBar(msg: String = "") {
-        var msg = msg
-        if (msg.isEmpty()) {
-            msg = R.string.label_please_wait.toString()
-        }
-        llProgressBar?.message?.text = msg
-        llProgressBar?.visibility = View.VISIBLE
-    }
-
-    private var passIdClient: PassIdClient? = null
 
     companion object {
-
         private val TAG = SelectionActivity::class.java.simpleName
         private val REQUEST_MRZ = 12
         private val REQUEST_NFC = 11

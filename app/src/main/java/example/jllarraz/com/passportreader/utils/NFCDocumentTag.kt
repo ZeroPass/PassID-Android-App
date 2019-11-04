@@ -6,6 +6,7 @@ import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.util.Log
 import example.jllarraz.com.passportreader.data.*
+import example.jllarraz.com.passportreader.proto.PassIdProtoChallenge
 import io.reactivex.Single
 import io.reactivex.Single.fromCallable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -20,7 +21,7 @@ import java.security.Security
 
 class NFCDocumentTag {
 
-    fun handleTag(context: Context, tag: Tag, mrzInfo: MRZInfo, passIdChallenge: ByteArray?, passportCallback: PassportCallback):Disposable{
+    fun handleTag(context: Context, tag: Tag, mrzInfo: MRZInfo, passIdChallenge: PassIdProtoChallenge?, passportCallback: PassportCallback):Disposable{
         return  fromCallable {
             var passport: Passport? = null
             var passIdData: PassIdData? = null
@@ -237,7 +238,7 @@ class NFCDocumentTag {
         fun onPassportReadStart()
         fun onPassportReadFinish()
         fun onPassportRead(passport: Passport?)
-        fun onPassIdDataRead(passIdData: PassIdData?)
+        fun onPassIdDataRead(passIdData: PassIdData)
         fun onAccessDeniedException(exception: AccessDeniedException)
         fun onBACDeniedException(exception: BACDeniedException)
         fun onPACEException(exception: PACEException)
