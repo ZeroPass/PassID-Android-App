@@ -169,13 +169,26 @@ class PassIdApi(url: String) : Closeable {
         private suspend fun Future<RpcResponse>.await() : RpcResponse {
             return withContext(Dispatchers.IO) {
                 while(!isDone){
-                    lockAndWaitNanos(100000000)
+                    lockAndWaitNanos(100000000) // 100 ms
                     if(!isActive) {
                         cancel(true) // stop the underlying task because parent task was canceled
                     }
                     yield()
                 }
-                get()
+                getOrThrow()
+            }
+        }
+
+        private fun Future<RpcResponse>.getOrThrow() : RpcResponse {
+            // RpcConnection error wrapper in case get throws and exception
+            try {
+                return get()
+            }
+            catch(e: Exception){
+                if(e.cause is RpcConnectionTimeout || e.cause is RpcConnectionError) {
+                    throw e.cause!!
+                }
+                throw e
             }
         }
     }
