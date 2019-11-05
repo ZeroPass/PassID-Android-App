@@ -1,8 +1,8 @@
 package example.jllarraz.com.passportreader.proto
 
 import android.util.Log
+import example.jllarraz.com.passportreader.PassIdApp
 import info.laht.yajrpc.RpcError
-import okhttp3.OkHttpClient
 import info.laht.yajrpc.RpcParams
 import info.laht.yajrpc.RpcNoParams
 import info.laht.yajrpc.RpcResponse
@@ -30,13 +30,15 @@ class PassIdApi(url: String) : Closeable {
     var url: String
         set(url)  {
             rpc.url = url
+            PassIdApp.allowedHost = url
         }
         get() {
             return rpc.url
         }
 
     init {
-        val httpClient = OkHttpClient().newBuilder().build()
+        PassIdApp.allowedHost = url
+        val httpClient = PassIdApp.getHttpClient()
         this.rpc = JsonRpcClient(httpClient, url)
     }
 
