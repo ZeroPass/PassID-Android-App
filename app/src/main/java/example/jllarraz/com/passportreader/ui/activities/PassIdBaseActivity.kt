@@ -2,9 +2,7 @@ package example.jllarraz.com.passportreader.ui.activities
 
 import android.app.AlertDialog
 import android.app.Dialog
-import android.content.DialogInterface
 import android.os.Bundle
-import android.os.ConditionVariable
 import android.util.Log
 import android.view.View
 import android.view.Window
@@ -18,7 +16,6 @@ import example.jllarraz.com.passportreader.ui.fragments.SettingsFragment
 import kotlinx.android.synthetic.main.fragment_selection.*
 import kotlinx.android.synthetic.main.layout_progress_bar.view.*
 import kotlinx.coroutines.*
-import okhttp3.internal.notify
 import kotlin.coroutines.CoroutineContext
 
 abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope {
@@ -42,6 +39,7 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
 
 
     protected fun register() = passIdScope {
+        showProgressBar("Please wait ...")
         passId!!.register { challenge ->
             hideProgressBar()
             val data = getPassIdData(challenge)
@@ -50,12 +48,12 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
         }
 
         hideProgressBar()
-        Log.i(TAG, "register succeded")
-        passId!!.session!!.uid
+        Log.i(TAG, "register succeeded")
         onRegisterSucceed(passId!!.session!!.uid)
     }
 
     protected fun login() = passIdScope {
+        showProgressBar("Please wait ...")
         passId!!.login() { challenge ->
             hideProgressBar()
             val data = getPassIdData(challenge)
@@ -67,7 +65,6 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
         Log.i(TAG, "log-in succeeded")
         onLoginSucceed(passId!!.session!!.uid)
     }
-
 
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
@@ -159,7 +156,6 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
     protected fun passIdScope(callback: suspend () -> Unit) = launch {
 
         initPassIdClient()
-        showProgressBar("Please wait ...")
         try {
             callback.invoke()
         }
