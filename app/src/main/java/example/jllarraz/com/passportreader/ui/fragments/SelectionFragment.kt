@@ -14,6 +14,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.RadioGroup
 import android.widget.Toast
+import androidx.appcompat.widget.AppCompatRadioButton
 
 import com.mobsandgeeks.saripaar.ValidationError
 import com.mobsandgeeks.saripaar.Validator
@@ -31,6 +32,7 @@ import example.jllarraz.com.passportreader.ui.validators.DocumentNumberRule
 class SelectionFragment : androidx.fragment.app.Fragment(), Validator.ValidationListener {
 
     private var radioGroup: RadioGroup? = null
+    private var rbManual: AppCompatRadioButton? = null
     private var linearLayoutManual: LinearLayout? = null
     private var linearLayoutAutomatic: LinearLayout? = null
     private var appCompatEditTextDocumentNumber: AppCompatEditText? = null
@@ -51,6 +53,7 @@ class SelectionFragment : androidx.fragment.app.Fragment(), Validator.Validation
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         radioGroup = view.findViewById(R.id.radioButtonDataEntry)
+        rbManual = view.findViewById<AppCompatRadioButton>(        R.id.radioButtonManual)
         linearLayoutManual = view.findViewById(R.id.layoutManual)
         linearLayoutAutomatic = view.findViewById(R.id.layoutAutomatic)
         appCompatEditTextDocumentNumber = view.findViewById(R.id.documentNumber)
@@ -102,7 +105,7 @@ class SelectionFragment : androidx.fragment.app.Fragment(), Validator.Validation
     }
 
     fun selectManualToggle() {
-        radioGroup!!.check(R.id.radioButtonManual)
+        rbManual!!.isChecked = true
     }
 
 
