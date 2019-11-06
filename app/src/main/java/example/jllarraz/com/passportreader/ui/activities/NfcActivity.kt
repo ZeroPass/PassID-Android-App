@@ -81,7 +81,7 @@ class NfcActivity : androidx.fragment.app.FragmentActivity(), NfcFragment.NfcFra
             // drop NFC events
             handleIntent(intent)
         }
-        //super.onNewIntent(intent)
+        super.onNewIntent(intent)
     }
 
     protected fun handleIntent(intent: Intent) {
@@ -117,8 +117,6 @@ class NfcActivity : androidx.fragment.app.FragmentActivity(), NfcFragment.NfcFra
     override fun onPassIdDataRead(passIdData: PassIdData) {
         val data = Intent();
         data.putExtra(IntentData.KEY_PASSID_DATA, passIdData)
-        data.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        data.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         setResult(RESULT_OK, data)
         finish()
     }
