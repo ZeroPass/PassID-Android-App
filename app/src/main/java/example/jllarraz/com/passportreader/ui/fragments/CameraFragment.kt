@@ -78,7 +78,7 @@ abstract class CameraFragment : androidx.fragment.app.Fragment(), ActivityCompat
         super.onSaveInstanceState(outState)
     }
 
-    fun buildCamera(cameraView: CameraView, lensPosition: LensPosition = LensPosition.Back) {
+    private fun buildCamera(cameraView: CameraView, lensPosition: LensPosition = LensPosition.Back) {
         if (fotoapparat == null) {
             fotoapparat = Fotoapparat
                     .with(context?.applicationContext!!)
@@ -145,7 +145,7 @@ abstract class CameraFragment : androidx.fragment.app.Fragment(), ActivityCompat
         super.onResume()
 
         rotation = getRotation(context!!, initialLensPosition)
-        buildCamera(cameraPreview!!, initialLensPosition)
+        buildCamera(cameraPreview, initialLensPosition)
 
         hasCameraPermission = hasCameraPermission()
         if (hasCameraPermission) {
@@ -175,7 +175,6 @@ abstract class CameraFragment : androidx.fragment.app.Fragment(), ActivityCompat
 
     override fun onDetach() {
         super.onDetach()
-
     }
 
 
