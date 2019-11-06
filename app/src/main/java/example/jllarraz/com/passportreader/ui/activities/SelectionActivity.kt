@@ -96,11 +96,11 @@ class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFrag
     }
 
     override fun onLoginSucceed(uid: UserId) {
-        showSuccessScreen("Login succeed", uid)
+        showSuccessScreen("Login Succeeded", uid)
     }
 
     override fun onRegisterSucceed(uid: UserId) {
-        showSuccessScreen("Registration succeed", uid)
+        showSuccessScreen("Registration Succeeded", uid)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -170,7 +170,7 @@ class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFrag
     private fun showSuccessScreen(title: String, uid: UserId) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.container, SuccessFragment.newInstance(title, uid))
-            .commit()
+            .commitAllowingStateLoss()
     }
 
     companion object {
