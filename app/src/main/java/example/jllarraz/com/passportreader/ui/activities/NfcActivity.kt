@@ -61,8 +61,8 @@ class NfcActivity : androidx.fragment.app.FragmentActivity(), NfcFragment.NfcFra
 
         if (null == savedInstanceState) {
             supportFragmentManager.beginTransaction()
-                    .replace(R.id.container, NfcFragment.newInstance(mrzInfo!!, passIdChallenge), TAG_NFC)
-                    .commit()
+                .replace(R.id.container, NfcFragment.newInstance(mrzInfo!!, passIdChallenge), TAG_NFC)
+                .commit()
         }
     }
 
@@ -141,7 +141,6 @@ class NfcActivity : androidx.fragment.app.FragmentActivity(), NfcFragment.NfcFra
         // here are details of read passport handled to PassportDetailsFragment
         supportFragmentManager.beginTransaction()
                 .replace(R.id.container, PassportDetailsFragment.newInstance(passport))
-                .addToBackStack(TAG_PASSPORT_DETAILS)
                 .commit()
     }
 
@@ -160,10 +159,7 @@ class NfcActivity : androidx.fragment.app.FragmentActivity(), NfcFragment.NfcFra
     companion object {
 
         private val TAG = NfcActivity::class.java.simpleName
-
-
         private val TAG_NFC = "TAG_NFC"
-        private val TAG_PASSPORT_DETAILS = "TAG_PASSPORT_DETAILS"
         private val TAG_PASSPORT_PICTURE = "TAG_PASSPORT_PICTURE"
     }
 }

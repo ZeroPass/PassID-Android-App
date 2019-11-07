@@ -3,6 +3,7 @@ package example.jllarraz.com.passportreader.ui.fragments
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
 import androidx.core.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.View
@@ -27,32 +28,29 @@ class PassportDetailsFragment : androidx.fragment.app.Fragment() {
 
     private var passportDetailsFragmentListener: PassportDetailsFragmentListener? = null
 
-    internal var simpleDateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH)
+    private var simpleDateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH)
 
     private var passport: Passport? = null
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-
-        val inflatedView = inflater.inflate(R.layout.fragment_passport_details, container, false)
-
-
-
-
-        return inflatedView
+        return inflater.inflate(
+                R.layout.fragment_passport_details, container,
+                false
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        
         val arguments = arguments
         if (arguments!!.containsKey(IntentData.KEY_PASSPORT)) {
             passport = arguments.getParcelable<Passport>(IntentData.KEY_PASSPORT)
         } else {
-            //error
+            Log.e(TAG, "No passport data was supplied, finishing!")
+            activity?.finish()
         }
-
 
         iconPhoto!!.setOnClickListener {
             var bitmap = passport!!.face
@@ -67,7 +65,6 @@ class PassportDetailsFragment : androidx.fragment.app.Fragment() {
 
     override fun onResume() {
         super.onResume()
-
         refreshData(passport)
     }
 
@@ -395,6 +392,7 @@ class PassportDetailsFragment : androidx.fragment.app.Fragment() {
 
     companion object {
 
+        private var TAG = PassportDetailsFragment::class.java.simpleName
 
         fun newInstance(passport: Passport): PassportDetailsFragment {
             val myFragment = PassportDetailsFragment()
