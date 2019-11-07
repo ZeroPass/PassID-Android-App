@@ -2,6 +2,7 @@ package example.jllarraz.com.passportreader.ui.activities
 
 import android.app.AlertDialog
 import android.app.Dialog
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -25,12 +26,14 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
 
     private lateinit var job: Job
     private var passId: PassIdClient? = null
+    protected lateinit var pfs: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         job = Job()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         setContentView(R.layout.activity_camera)
+        pfs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
     }
 
     abstract suspend fun getPassIdData(challenge: PassIdProtoChallenge) : PassIdData
@@ -179,17 +182,15 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
 
     private fun initPassIdClient() {
         if (passId == null) {
-            val pfm = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-            val url = pfm.getString(getString(R.string.pf_server_url), SettingsFragment.DEFAULT_HOST)!!
-            val timeout = pfm.getString(getString(R.string.pf_connection_timeout), SettingsFragment.DEFAULT_TIMEOUT)!!.toLong()
-
-            passId = PassIdClient(url, timeout)
+            passId = PassIdClient(clientUrl, clientTimeout)
             passId!!.onConnectionFailed = {
                 // If connection fails for any reason this functions shows connection error popup dialog,
                 // and notifies back passID client if it should retry sending request to the server or give up.
                 val shouldRetry = CompletableDeferred<Boolean>()
                 showConnectionError(
                     onRetry = {
+                        passId!!.url = clientUrl
+                        passId!!.timeout = clientTimeout
                         shouldRetry.complete(true)
                     },
                     onCancel = {
@@ -202,6 +203,16 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
             }
         }
     }
+
+    val clientUrl: String
+        get() {
+            return pfs.getString(getString(R.string.pf_server_url), SettingsFragment.DEFAULT_HOST)!!
+        }
+
+    val clientTimeout: Long
+        get() {
+            return pfs.getString(getString(R.string.pf_connection_timeout), SettingsFragment.DEFAULT_TIMEOUT)!!.toLong()
+        }
 
     companion object {
         private val TAG = SelectionActivity::class.java.simpleName

@@ -15,6 +15,22 @@ class PassIdClient(url: String, timeout: Long = 5000) : Closeable {
     var onConnectionFailed: (suspend () -> Retry)? = null  // called when sending request to server fails
     var session: PassIdSession? = null
 
+    var url: String
+        set(url)  {
+            api.url = url
+        }
+        get() {
+            return api.url
+        }
+
+    var timeout: Long
+        set(timeout)  {
+            api.timeout = timeout
+        }
+        get() {
+            return api.timeout
+        }
+
 
     @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
     suspend fun register( onRequirePassIdData: RequirePassIdDataCallback) {
