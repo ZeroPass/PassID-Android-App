@@ -20,6 +20,7 @@ class SuccessFragment :  androidx.fragment.app.Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        activity?.title = ""
         title!!.text = arguments?.getString("title")
         uid!!.text = arguments?.getParcelable<UserId>("uid")!!.hex()
     }
