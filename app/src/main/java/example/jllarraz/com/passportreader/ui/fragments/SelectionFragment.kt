@@ -1,10 +1,9 @@
 package example.jllarraz.com.passportreader.ui.fragments
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import androidx.appcompat.widget.AppCompatEditText
 import android.view.LayoutInflater
 import android.view.View
@@ -15,19 +14,20 @@ import android.widget.LinearLayout
 import android.widget.RadioGroup
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatRadioButton
+import androidx.preference.PreferenceManager
 
 import com.mobsandgeeks.saripaar.ValidationError
 import com.mobsandgeeks.saripaar.Validator
 
 import net.sf.scuba.data.Gender
 
-
 import org.jmrtd.lds.icao.MRZInfo
 
 import example.jllarraz.com.passportreader.R
-import example.jllarraz.com.passportreader.common.IntentData
+import example.jllarraz.com.passportreader.ui.activities.SelectionActivity
 import example.jllarraz.com.passportreader.ui.validators.DateRule
 import example.jllarraz.com.passportreader.ui.validators.DocumentNumberRule
+
 
 class SelectionFragment : androidx.fragment.app.Fragment(), Validator.ValidationListener {
 
@@ -38,14 +38,18 @@ class SelectionFragment : androidx.fragment.app.Fragment(), Validator.Validation
     private var appCompatEditTextDocumentNumber: AppCompatEditText? = null
     private var appCompatEditTextDocumentExpiration: AppCompatEditText? = null
     private var appCompatEditTextDateOfBirth: AppCompatEditText? = null
+    private var btnFillData: Button? = null
     private var buttonReadNFC: Button? = null
 
     private var mValidator: Validator? = null
     private var selectionFragmentListener: SelectionFragmentListener? = null
 
+    lateinit var pfs: SharedPreferences
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
 
+        pfs = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
         val inflatedView = inflater.inflate(R.layout.fragment_selection, container, false)
         return inflatedView
     }
@@ -59,7 +63,14 @@ class SelectionFragment : androidx.fragment.app.Fragment(), Validator.Validation
         appCompatEditTextDocumentNumber = view.findViewById(R.id.documentNumber)
         appCompatEditTextDocumentExpiration = view.findViewById(R.id.documentExpiration)
         appCompatEditTextDateOfBirth = view.findViewById(R.id.documentDateOfBirth)
-        
+
+        btnFillData = view.findViewById(R.id.btnFillData)
+        if(!pfs.contains(SelectionActivity.PF_DOC_NUM) &&
+                !pfs.contains(SelectionActivity.PF_DOC_DOB) &&
+                !pfs.contains(SelectionActivity.PF_DOC_DOE)) {
+            btnFillData!!.visibility = View.GONE
+        }
+
         buttonReadNFC = view.findViewById(R.id.buttonReadNfc)
 
         radioGroup!!.setOnCheckedChangeListener { group, checkedId ->
@@ -76,6 +87,12 @@ class SelectionFragment : androidx.fragment.app.Fragment(), Validator.Validation
                     }
                 }
             }
+        }
+
+        btnFillData!!.setOnClickListener {
+            appCompatEditTextDocumentNumber!!.setText(pfs.getString(SelectionActivity.PF_DOC_NUM, ""))
+            appCompatEditTextDateOfBirth!!.setText(pfs.getString(SelectionActivity.PF_DOC_DOB, ""))
+            appCompatEditTextDocumentExpiration!!.setText(pfs.getString(SelectionActivity.PF_DOC_DOE, ""))
         }
 
         buttonReadNFC!!.setOnClickListener { validateFields() }

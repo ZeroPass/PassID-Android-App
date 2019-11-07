@@ -153,8 +153,13 @@ class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFrag
     }
 
     override fun onPassportRead(mrzInfo: MRZInfo) {
-        val intent = Intent(this, NfcActivity::class.java)
+        pfs.edit().apply(){
+            putString(PF_DOC_NUM, mrzInfo.documentNumber)
+            putString(PF_DOC_DOB, mrzInfo.dateOfBirth)
+            putString(PF_DOC_DOE, mrzInfo.dateOfExpiry)
+        }.apply()
 
+        val intent = Intent(this, NfcActivity::class.java)
         intent.putExtra(IntentData.KEY_MRZ_INFO, mrzInfo)
         if(nfcIntentExtras != null) {
             intent.putExtras(nfcIntentExtras!!)
@@ -175,13 +180,17 @@ class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFrag
 
     companion object {
         private val TAG = SelectionActivity::class.java.simpleName
-        private val REQUEST_MRZ = 12
-        private val REQUEST_NFC = 11
+        private const val REQUEST_MRZ = 12
+        private const val REQUEST_NFC = 11
 
-        private val TAG_SELECTION_FRAGMENT = "TAG_SELECTION_FRAGMENT"
+        private const val TAG_SELECTION_FRAGMENT = "TAG_SELECTION_FRAGMENT"
 
         const val ACTION_REGISTER      = "example.jllarraz.com.passportreader.ui.activities.ACTION_REGISTER"
         const val ACTION_LOGIN         = "example.jllarraz.com.passportreader.ui.activities.ACTION_LOGIN"
         const val ACTION_VIEW_PASSPORT = "example.jllarraz.com.passportreader.ui.activities.ACTION_VIEW_PASSPORT"
+
+        const val PF_DOC_NUM = "DOCUMENT_NUMBER"
+        const val PF_DOC_DOB = "DOCUMENT DATE_OF_BIRTH"
+        const val PF_DOC_DOE = "DOCUMENT EXPIRY DATE"
     }
 }

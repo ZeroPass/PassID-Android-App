@@ -66,7 +66,8 @@
     <string name="prompt_document_expiration">Document Expiration (yymmdd)</string>
     <string name="prompt_document_date_of_birth">Date of Birth (yymmdd)</string>
 
-    <string name="read_nfc">READ NFC</string>
+    <string name="fill_stored_data">FILL FROM STORAGE</string>
+    <string name="read_nfc">READ PASSPORT</string>
 
     <string name="error_validation_date">Date format is not valid</string>
     <string name="error_validation_document_number">Document number is not valid</string>
