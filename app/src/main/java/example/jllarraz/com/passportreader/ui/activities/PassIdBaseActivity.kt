@@ -126,6 +126,12 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
             // TODO: parse message and translate to system language
             msg = error.message
         }
+        if(error.code == 406) {
+            msg = "Passport verification failed!"
+            else if(error.message.equals("Invalid DG15 file", true)) {
+                msg = "Server refused to accept passport's public key!"
+            }
+        }
         else if(error.code == 409) {
             msg = "Account already exists!"
         }
