@@ -1,18 +1,21 @@
 package example.jllarraz.com.passportreader.proto
 
 import example.jllarraz.com.passportreader.data.PassIdData
-import org.bouncycastle.asn1.cmp.Challenge
 import org.jmrtd.lds.icao.DG14File
+import org.jmrtd.lds.icao.DG1File
 import java.io.Closeable
-import java.io.IOException
 
 
 typealias Retry = Boolean
+typealias SendPersonalData = Boolean
 typealias RequirePassIdDataCallback = suspend (challenge: PassIdProtoChallenge) -> PassIdData
+
+class RethrownException(e: Throwable) : Throwable(e)
 
 class PassIdClient(url: String, timeout: Long = 5000) : Closeable {
 
     var onConnectionFailed: (suspend () -> Retry)? = null  // called when sending request to server fails
+    var onPersonalDataRequested: (suspend () -> SendPersonalData)? = null
     var session: PassIdSession? = null
 
     var url: String
@@ -39,7 +42,7 @@ class PassIdClient(url: String, timeout: Long = 5000) : Closeable {
 
         var dg14File: DG14File? = null
         if(data.dg15File!!.publicKey.algorithm != "RSA") {
-            dg14File = data!!.dg14File // TODO: throw PassIdProtoError
+            dg14File = data.dg14File!! // TODO: throw PassIdProtoError
         }
 
         session = retriableCall{
@@ -59,12 +62,22 @@ class PassIdClient(url: String, timeout: Long = 5000) : Closeable {
         challenge = retriableCall{api.getChallenge()}
         val data = onRequirePassIdData(challenge!!)
 
-        session = retriableCall{
+        session = retriableCall({e: PassIdApiError? ->
+            var dg1 : DG1File? = null
+            if(e != null) {
+                if(e.code != 428 || !(onPersonalDataRequested?.invoke() as Boolean)) {
+                    throw RethrownException(e)
+                }
+                dg1 = data.dg1File
+            }
+
             api.login(
                 UserId.fromAAPublicKey(data.dg15File!!),
                 challenge!!.id,
-                data.ccSignatures!!
-            )}
+                data.ccSignatures!!,
+                dg1
+            )
+        })
 
         resetChallenge()
     }
@@ -93,15 +106,37 @@ class PassIdClient(url: String, timeout: Long = 5000) : Closeable {
         api.timeout = timeout
     }
 
-    private suspend fun<T> retriableCall(call: suspend () -> T) : T {
+    private suspend fun<T> retriableCall(call: suspend(apiError: PassIdApiError?) -> T, e: PassIdApiError? = null) : T {
         try {
-            return call()
+            return call(e)
         }
         catch (e: RpcConnectionError) {
             if(onConnectionFailed?.invoke() as Boolean){
                 return retriableCall(call)
             }
             throw e
+        }
+        catch (e: RethrownException) {
+            throw e.cause!!
+        }
+        catch (e: PassIdApiError) {
+            return retriableCall(call, e)
+        }
+    }
+
+    /* If api error exception is encountered, exception will be rethrown and not be passed to callback */
+    private  suspend fun<T> retriableCall(call: suspend() -> T) : T {
+        return retriableCall({ e: PassIdApiError? ->
+            rethrowIfError(e)
+            call()
+        })
+    }
+
+    companion object {
+        private fun rethrowIfError(e: Throwable?) {
+            if(e != null) {
+                throw  RethrownException(e)
+            }
         }
     }
 }

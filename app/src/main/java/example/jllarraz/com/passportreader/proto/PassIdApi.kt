@@ -15,6 +15,7 @@ import org.jmrtd.lds.icao.DG15File
 
 import example.jllarraz.com.passportreader.utils.StringUtils.b64Encode
 import okhttp3.internal.lockAndWaitNanos
+import org.jmrtd.lds.icao.DG1File
 import java.io.Closeable
 import java.util.*
 import java.util.concurrent.Future
@@ -102,14 +103,15 @@ class PassIdApi(url: String) : Closeable {
 
     /* API: passID.login */
     @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
-    suspend fun login(uid: UserId, cid: CID, csigs: List<ByteArray>) : PassIdSession {
+    suspend fun login(uid: UserId, cid: CID, csigs: List<ByteArray>, dg1: DG1File? = null) : PassIdSession {
         Log.d(TAG, "Requesting login session from server ...")
 
-        val params = RpcParams.mapParams(mapOf(
+        val params = RpcParams.mapParams(listOfNotNull(
                 "uid" to uid.toBase64(),
                 "cid" to cid.hex(),
-                "csigs" to csigs.map{ b64Encode(it) }
-        ))
+                "csigs" to csigs.map{ b64Encode(it) },
+                if (dg1 != null) "dg1" to b64Encode(dg1.encoded) else null
+        ).toMap())
 
         val resp = transceive(getApiMethod("login"), params)
         requireRespField("session_key",resp)

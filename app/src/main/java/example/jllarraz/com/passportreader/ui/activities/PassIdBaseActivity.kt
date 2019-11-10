@@ -19,6 +19,8 @@ import kotlinx.android.synthetic.main.layout_progress_bar.view.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
+class FinishActivityException() : Throwable()
+
 abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope {
 
     override val coroutineContext: CoroutineContext
@@ -89,6 +91,7 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
         if (msg.isEmpty()) {
             msg = getString(R.string.label_please_wait)
         }
+
         llProgressBar?.message?.text = msg
         llProgressBar?.visibility = View.VISIBLE
     }
@@ -128,6 +131,9 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
         }
         if(error.code == 406) {
             msg = "Passport verification failed!"
+            if(error.message.equals("Invalid DG1 file", true)) {
+                msg = "Server refused to accept sent personal data!"
+            }
             else if(error.message.equals("Invalid DG15 file", true)) {
                 msg = "Server refused to accept passport's public key!"
             }
@@ -137,6 +143,22 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
         }
 
         showFatalError(msg)
+    }
+
+    protected fun showPersonalDataNeededWarning(onRetry: () -> Unit, onCancel: () -> Unit) {
+        AlertDialog.Builder(this)
+            .setTitle("Personal data requested")
+            .setMessage("Server requested personal data in order to log in.\n\nSend personal data to server?")
+            .setPositiveButton("Send") { dialog, _ ->
+                dialog.dismiss()
+                onRetry()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+                onCancel()
+            }
+            .setCancelable(false)
+            .show()
     }
 
     protected fun showFatalError(msg: String) {
@@ -173,15 +195,17 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
                 throw e
             }
 
-            e.printStackTrace()
-            if( e is PassIdApiError) {
-                showProtoError(e)
-            }
-            else if(e is RpcConnectionError) {
+            if(e is FinishActivityException) {
                 onBackPressed()
             }
-            else {
-                showFatalError("Unknown error occurred!")
+            else{
+                e.printStackTrace()
+                if(e is PassIdApiError) {
+                    showProtoError(e)
+                }
+                else {
+                    showFatalError("Unknown error occurred!")
+                }
             }
         }
     }
@@ -203,9 +227,29 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
                         shouldRetry.complete(false)
                     }
                 )
-
                 shouldRetry.await()
-                shouldRetry.getCompleted()
+                shouldRetry.await()
+                if(!shouldRetry.getCompleted()){
+                    throw FinishActivityException()
+                }
+                true
+            }
+
+            passId!!.onPersonalDataRequested = {
+                val sendPersonalData = CompletableDeferred<Boolean>()
+                showPersonalDataNeededWarning(
+                    onRetry = {
+                        sendPersonalData.complete(true)
+                    },
+                    onCancel = {
+                        sendPersonalData.complete(false)
+                    }
+                )
+                sendPersonalData.await()
+                if(!sendPersonalData.getCompleted()){
+                    throw FinishActivityException()
+                }
+                true
             }
         }
     }

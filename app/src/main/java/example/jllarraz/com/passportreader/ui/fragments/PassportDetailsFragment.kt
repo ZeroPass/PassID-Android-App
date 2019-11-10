@@ -43,7 +43,7 @@ class PassportDetailsFragment : androidx.fragment.app.Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         val arguments = arguments
         if (arguments!!.containsKey(IntentData.KEY_PASSPORT)) {
             passport = arguments.getParcelable<Passport>(IntentData.KEY_PASSPORT)
