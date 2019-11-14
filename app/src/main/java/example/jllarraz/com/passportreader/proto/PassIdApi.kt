@@ -26,10 +26,10 @@ data class PassIdApiError(val code: Int, override val message: String, val data:
 
 class PassIdApi(url: String) : Closeable {
 
-    private lateinit  var rpc: JsonRpcClient
+    private lateinit var rpc: JsonRpcClient
     var timeout: Long = 2000
     var url: String
-        set(url)  {
+        set(url) {
             rpc.url = url
             PassIdApp.allowedHost = url
         }
@@ -48,12 +48,12 @@ class PassIdApi(url: String) : Closeable {
     }
 
 
-/******************************************** API CALLS *****************************************************/
-/************************************************************************************************************/
+    /******************************************** API CALLS *****************************************************/
+    /************************************************************************************************************/
 
     /* API: passID.ping */
     @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
-    suspend fun ping() : Int {
+    suspend fun ping(): Int {
         Log.d(TAG, "Sending ping request ...")
 
         val param = RpcParams.mapParams(mapOf(
@@ -68,7 +68,7 @@ class PassIdApi(url: String) : Closeable {
 
     /* API: passID.getChallenge */
     @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
-    suspend fun getChallenge() : PassIdProtoChallenge {
+    suspend fun getChallenge(): PassIdProtoChallenge {
         Log.d(TAG, "Requesting challenge from server ...")
 
         val resp = transceive(getApiMethod("getChallenge"))
@@ -77,25 +77,35 @@ class PassIdApi(url: String) : Closeable {
         return PassIdProtoChallenge.fromBase64(resp.getValue("challenge") as String)
     }
 
+    /* API: passID.cancelChallenge */
+    @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
+    fun cancelChallenge(challenge: PassIdProtoChallenge) {
+        Log.d(TAG, "Canceling challenge request ...")
+        val param = RpcParams.mapParams(mapOf(
+            "challenge" to challenge.toBase64()
+        ))
+        rpc.notify(getApiMethod("cancelChallenge"), param)
+    }
+
     /* API: passID.register */
     @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
-    suspend fun register(dg15: DG15File, sod: SODFile, cid: CID, csigs: List<ByteArray>, dg14: DG14File? = null) : PassIdSession {
+    suspend fun register(dg15: DG15File, sod: SODFile, cid: CID, csigs: List<ByteArray>, dg14: DG14File? = null): PassIdSession {
         Log.d(TAG, "Requesting registration session from server ...")
 
         val params = RpcParams.mapParams(listOfNotNull(
             "dg15" to b64Encode(dg15.encoded),
             "sod" to b64Encode(sod.encoded),
             "cid" to cid.hex(),
-            "csigs" to csigs.map{ b64Encode(it) },
+            "csigs" to csigs.map { b64Encode(it) },
             if (dg14 != null) "dg14" to b64Encode(dg14.encoded) else null
         ).toMap())
 
         val resp = transceive(getApiMethod("register"), params)
-        requireRespField("uid",resp)
-        requireRespField("session_key",resp)
-        requireRespField("expires",resp)
+        requireRespField("uid", resp)
+        requireRespField("session_key", resp)
+        requireRespField("expires", resp)
 
-        val uid= UserId.fromBase64(resp.getValue("uid") as String)
+        val uid = UserId.fromBase64(resp.getValue("uid") as String)
         val sessionKey = SessionKey.fromBase64(resp.getValue("session_key") as String)
         val expires = fromTimestamp(resp.getValue("expires"))
         return PassIdSession(uid, sessionKey, expires)
@@ -107,10 +117,10 @@ class PassIdApi(url: String) : Closeable {
         Log.d(TAG, "Requesting login session from server ...")
 
         val params = RpcParams.mapParams(listOfNotNull(
-                "uid" to uid.toBase64(),
-                "cid" to cid.hex(),
-                "csigs" to csigs.map{ b64Encode(it) },
-                if (dg1 != null) "dg1" to b64Encode(dg1.encoded) else null
+            "uid" to uid.toBase64(),
+            "cid" to cid.hex(),
+            "csigs" to csigs.map{ b64Encode(it) },
+            if (dg1 != null) "dg1" to b64Encode(dg1.encoded) else null
         ).toMap())
 
         val resp = transceive(getApiMethod("login"), params)
@@ -126,7 +136,7 @@ class PassIdApi(url: String) : Closeable {
 /************************************************************************************************************/
 
     @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
-    private suspend inline fun transceive(method: String, params: RpcParams = RpcNoParams): Map<String, Any>{
+    private suspend inline fun transceive(method: String, params: RpcParams = RpcNoParams): Map<String, Any> {
         return withContext(Dispatchers.IO) {
             val resp: RpcResponse = rpc.write(method, params, timeout).await()
             if (resp.hasError) {

@@ -1,5 +1,6 @@
 package example.jllarraz.com.passportreader.proto
 
+import android.util.Log
 import example.jllarraz.com.passportreader.data.PassIdData
 import org.jmrtd.lds.icao.DG14File
 import org.jmrtd.lds.icao.DG1File
@@ -92,7 +93,14 @@ class PassIdClient(url: String, timeout: Long = 5000) : Closeable {
 
     override fun close() {
         if(hasChallenge()) {
-            // TODO: if challenge is not null, notify server to cancel challenge
+            try {
+                api.cancelChallenge(challenge!!) // Note: On failed connection server won't be notified
+            }
+            catch (e: Throwable){
+                Log.w(PassIdApi::class.java.name, "An exception was encountered while trying to notify server to cancel challenge!")
+                Log.w(PassIdApi::class.java.name, "e=${e.message}")
+            }
+
             resetChallenge()
         }
         session = null
