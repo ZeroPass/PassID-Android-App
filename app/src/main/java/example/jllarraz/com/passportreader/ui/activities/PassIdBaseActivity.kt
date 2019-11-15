@@ -1,23 +1,22 @@
 package example.jllarraz.com.passportreader.ui.activities
 
 import android.app.AlertDialog
-import android.app.Dialog
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.view.Window
-import android.widget.Button
-import android.widget.TextView
 import androidx.preference.PreferenceManager
 import example.jllarraz.com.passportreader.R
 import example.jllarraz.com.passportreader.data.PassIdData
 import example.jllarraz.com.passportreader.proto.*
+import example.jllarraz.com.passportreader.ui.dialogs.ErrorAlert
+import example.jllarraz.com.passportreader.ui.dialogs.InfoAlert
 import example.jllarraz.com.passportreader.ui.fragments.SettingsFragment
 import kotlinx.android.synthetic.main.fragment_selection.*
 import kotlinx.android.synthetic.main.layout_progress_bar.view.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
+
 
 class FinishActivityException() : Throwable()
 
@@ -116,66 +115,61 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
     }
 
     protected fun showProtoError(error: PassIdApiError) {
+        var title: String? = "PassID Error"
         var msg = "Server returned error:\n${error.message}"
 
-        if(error.code == 401){
-            msg = "Authorization failed!"
-        }
-        else if(error.code == 412) {
-            msg = "Passport trust chain verification failed!"
-        }
-        if(error.code == 404) {
-            // TODO: parse message and translate to system language
-            msg = error.message
-        }
-        if(error.code == 406) {
-            msg = "Passport verification failed!"
-            if(error.message.equals("Invalid DG1 file", true)) {
-                msg = "Server refused to accept sent personal data!"
+        when {
+            error.code == 401 -> msg = "Authorization failed!"
+            error.code == 412 -> msg = "Passport trust chain verification failed!"
+            error.code == 404 -> {
+                // TODO: parse message and translate to system language
+                msg = error.message
             }
-            else if(error.message.equals("Invalid DG15 file", true)) {
-                msg = "Server refused to accept passport's public key!"
+            error.code == 406 -> {
+                msg = "Passport verification failed!"
+                when {
+                    error.message.equals("Invalid DG1 file", true) ->
+                        msg = "Server refused to accept sent personal data!"
+                    error.message.equals("Invalid DG15 file", true) ->
+                        msg = "Server refused to accept passport's public key!"
+                }
             }
-        }
-        else if(error.code == 409) {
-            msg = "Account already exists!"
+            error.code == 409 -> msg = "Account already exists!"
+            else -> title = null
         }
 
-        showFatalError(msg)
+        showFatalError(title, msg)
     }
 
     protected fun showPersonalDataNeededWarning(onRetry: () -> Unit, onCancel: () -> Unit) {
-        AlertDialog.Builder(this)
-            .setTitle("Personal data requested")
-            .setMessage("Server requested personal data in order to log in.\n\nSend personal data to server?")
-            .setPositiveButton("Send") { dialog, _ ->
-                dialog.dismiss()
-                onRetry()
-            }
-            .setNegativeButton("Cancel") { dialog, _ ->
-                dialog.dismiss()
-                onCancel()
-            }
-            .setCancelable(false)
-            .show()
+        val a = InfoAlert(this)
+        a.setTitle("PERSONAL INFORMATION REQUESTED")
+        a.message =  "Server requested your personal information.\nSend personal data to server?"
+        a.setPositiveButton("Send") { dialog, _ ->
+            dialog.dismiss()
+            onRetry()
+        }
+        a.setNegativeButton("Go Back") { dialog, _ ->
+            dialog.dismiss()
+            onCancel()
+        }
+        a.show()
     }
 
-    protected fun showFatalError(msg: String) {
-        val dialog = Dialog(this)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setCancelable(false)
-        dialog.setContentView(R.layout.error_dialog)
-
-        val text = dialog.findViewById(R.id.text_dialog) as TextView
-        text.text = msg
-
-        val dialogButton = dialog.findViewById(R.id.btn_dialog) as Button
-        dialogButton.setOnClickListener(View.OnClickListener {
+    protected fun showFatalError(title: String?, msg: String) {
+        val a = ErrorAlert(this)
+        if(title == null) {
+            a.setTitle(msg)
+        }
+        else {
+            a.setTitle(title)
+            a.message = msg
+        }
+        a.setPositiveButton("Close") { dialog, _ ->
             dialog.dismiss()
             onBackPressed()
-        })
-
-        dialog.show()
+        }
+        a.show()
     }
 
     /**
@@ -203,7 +197,7 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
                     showProtoError(e)
                 }
                 else {
-                    showFatalError("Unknown error occurred!")
+                    showFatalError(null, "Unknown error occurred!")
                 }
             }
         }
@@ -224,7 +218,6 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
                         shouldRetry.complete(false)
                     }
                 )
-                shouldRetry.await()
                 shouldRetry.await()
                 if(!shouldRetry.getCompleted()){
                     throw FinishActivityException()
