@@ -35,7 +35,7 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
         job = Job()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         setContentView(R.layout.activity_camera)
-        pfs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        pfs = PreferenceManager.getDefaultSharedPreferences(this)
     }
 
     abstract suspend fun getPassIdData(challenge: PassIdProtoChallenge) : PassIdData
@@ -91,7 +91,6 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
         if (msg.isEmpty()) {
             msg = getString(R.string.label_please_wait)
         }
-
         llProgressBar?.message?.text = msg
         llProgressBar?.visibility = View.VISIBLE
     }
@@ -219,8 +218,6 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
                 val shouldRetry = CompletableDeferred<Boolean>()
                 showConnectionError(
                     onRetry = {
-                        passId!!.url = clientUrl
-                        passId!!.timeout = clientTimeout
                         shouldRetry.complete(true)
                     },
                     onCancel = {
@@ -254,12 +251,20 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
         }
     }
 
-    val clientUrl: String
+    override fun onResume() {
+        super.onResume()
+        if(passId != null) {
+            passId!!.url = clientUrl
+            passId!!.timeout = clientTimeout
+        }
+    }
+
+    private val clientUrl: String
         get() {
             return pfs.getString(getString(R.string.pf_server_url), SettingsFragment.DEFAULT_HOST)!!
         }
 
-    val clientTimeout: Long
+    private val clientTimeout: Long
         get() {
             return pfs.getString(getString(R.string.pf_connection_timeout), SettingsFragment.DEFAULT_TIMEOUT)!!.toLong()
         }
