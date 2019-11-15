@@ -31,6 +31,7 @@ import org.jmrtd.protocol.BACResult
 import org.jmrtd.protocol.PACEResult
 
 class PassIdPassportNFCError(msg: String): IOException(msg)
+class PassIdUnsupportedPassport(msg: String): Exception(msg)
 
 class PassIdPassportNFC @Throws(GeneralSecurityException::class, PassIdPassportNFCError::class)
 private constructor() {
@@ -169,26 +170,30 @@ private constructor() {
             dgNumbersAlreadyRead.add(1)
         } catch (ioe: IOException) {
             ioe.printStackTrace()
-            Log.w(TAG, "Could not read file")
+            if (sodFile == null) {
+                throw PassIdPassportNFCError("Failed to read SOD file")
+            }
+            else {
+                throw PassIdPassportNFCError("Failed to read DG1 file")
+            }
         }
-
-        try {
-            dg14File = getDG14File(ps)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
 
         /* Get the list of DGs from EF.SOd, we don't trust EF.COM. */
         val dgNumbers = ArrayList<Int>()
-        if (sodFile != null) {
-            dgNumbers.addAll(sodFile!!.dataGroupHashes.keys)
-        }
-        // TODO: else throw an exception, because we need SOD file for passId
-
+        dgNumbers.addAll(sodFile!!.dataGroupHashes.keys)
         dgNumbers.sort() /* NOTE: need to sort it, since we get keys as a set. */
 
         Log.i(TAG, "Found DGs: $dgNumbers")
+
+        // Get DG14 file
+        if (dgNumbers.contains(14)) {
+            try {
+                dg14File = getDG14File(ps)
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to read DG14 file")
+                e.printStackTrace()
+            }
+        }
 
         /* Check AA support by DG15 presence. */
         if (dgNumbers.contains(15)) {
@@ -201,17 +206,12 @@ private constructor() {
             try {
                 dg15File = getDG15File(ps)
                 dgNumbersAlreadyRead.add(15)
-            } catch (ioe: IOException) {
-                ioe.printStackTrace()
-                Log.w(TAG, "Could not read file")
             } catch (e: Exception) {
-                verificationStatus.setAA(VerificationStatus.Verdict.NOT_CHECKED, "Failed to read DG15")
+                e.printStackTrace()
+                throw PassIdPassportNFCError("Failed to read DG15 file")
             }
-
         } else {
-            // TODO: Passport doesn't support crucial function for passID, throw an exception
-            /* Feature status says: no AA, so verification status should say: no AA. */
-            verificationStatus.setAA(VerificationStatus.Verdict.NOT_PRESENT, "AA is not supported")
+            throw PassIdUnsupportedPassport("Passport doesn't support AA")
         }
 
         signChallenge(challange)
