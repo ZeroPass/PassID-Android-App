@@ -79,7 +79,7 @@ class NFCDocumentTag {
                         try {
                             val faceImage = PassportNfcUtils.retrieveFaceImage(context, passportNFC.dg2File!!)
                             passport.face = faceImage
-                        } catch (e: Exception) {
+                        } catch (e: Throwable) {
                             //Don't do anything
                             e.printStackTrace()
                         }
