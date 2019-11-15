@@ -99,12 +99,10 @@ class NfcActivity : androidx.fragment.app.FragmentActivity(), NfcFragment.NfcFra
     /////////////////////////////////////////////////////
 
     override fun onEnableNfc() {
-
-
         if (nfcAdapter != null) {
-            if (!nfcAdapter!!.isEnabled)
+            if (!nfcAdapter!!.isEnabled) {
                 showWirelessSettings()
-
+            }
             nfcAdapter!!.enableForegroundDispatch(this, pendingIntent, null, null)
         }
     }

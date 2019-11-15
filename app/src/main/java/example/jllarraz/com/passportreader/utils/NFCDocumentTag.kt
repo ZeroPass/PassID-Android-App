@@ -33,7 +33,6 @@ class NFCDocumentTag {
                 nfc.timeout = 5000 // set 5s timeout to make sure AA will succeed
 
                 val cs = CardService.getInstance(nfc)
-
                 ps = PassportService(cs, 256, 224, false, true)
                 ps.open()
 
@@ -87,7 +86,6 @@ class NFCDocumentTag {
 
                     }
 
-
                     //Portrait
                     //Get the picture
                     if (passportNFC.dg5File != null) {
@@ -99,13 +97,10 @@ class NFCDocumentTag {
                             //Don't do anything
                             e.printStackTrace()
                         }
-
                     }
-
 
                     val dg11 = passportNFC.dg11File
                     if (dg11 != null) {
-
                         val additionalPersonDetails = AdditionalPersonDetails()
                         additionalPersonDetails.custodyInformation = dg11.custodyInformation
                         additionalPersonDetails.fullDateOfBirth = dg11.fullDateOfBirth
@@ -127,7 +122,6 @@ class NFCDocumentTag {
                         passport.additionalPersonDetails = additionalPersonDetails
                     }
 
-
                     //Finger prints
                     //Get the pictures
                     if (passportNFC.dg3File != null) {
@@ -142,7 +136,6 @@ class NFCDocumentTag {
 
                     }
 
-
                     //Signature
                     //Get the pictures
                     if (passportNFC.dg7File != null) {
@@ -154,11 +147,9 @@ class NFCDocumentTag {
                             //Don't do anything
                             e.printStackTrace()
                         }
-
                     }
 
                     //Additional Document Details
-
                     val dg12 = passportNFC.dg12File
                     if (dg12 != null) {
                         val additionalDocumentDetails = AdditionalDocumentDetails()
@@ -202,37 +193,32 @@ class NFCDocumentTag {
                 }
             }
 
-            PassportDTO(passport, passIdData, cardServiceException)
-        }
-                .doOnSubscribe{
+            return@fromCallable PassportDTO(passport, passIdData, cardServiceException)
+        }.doOnSubscribe{
             passportCallback.onPassportReadStart()
         }
-        .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe { passportDTO ->
-            if(passportDTO.cardServiceException!=null) {
-                val cardServiceException = passportDTO.cardServiceException
-                if (cardServiceException is AccessDeniedException) {
-                    passportCallback.onAccessDeniedException(cardServiceException)
-                } else if (cardServiceException is BACDeniedException) {
-                    passportCallback.onBACDeniedException(cardServiceException)
-                } else if (cardServiceException is PACEException) {
-                    passportCallback.onPACEException(cardServiceException)
-                } else if (cardServiceException is CardServiceException) {
-                    passportCallback.onCardException(cardServiceException)
-                } else {
-                    passportCallback.onGeneralException(cardServiceException)
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe { passportDTO ->
+            when {
+                passportDTO.cardServiceException!=null -> {
+                    when (val cardServiceException = passportDTO.cardServiceException) {
+                        is AccessDeniedException -> passportCallback.onAccessDeniedException(cardServiceException)
+                        is BACDeniedException -> passportCallback.onBACDeniedException(cardServiceException)
+                        is PACEException -> passportCallback.onPACEException(cardServiceException)
+                        is CardServiceException -> passportCallback.onCardException(cardServiceException)
+                        else -> passportCallback.onGeneralException(cardServiceException)
+                    }
                 }
-            } else if (passportDTO.passport != null){
-                passportCallback.onPassportRead(passportDTO.passport)
-            } else {
-                // We must have passIdData at this point
-                passportCallback.onPassIdDataRead(passportDTO.passIdData!!)
+                passportDTO.passport != null -> passportCallback.onPassportRead(passportDTO.passport)
+                else -> // We must have passIdData at this point
+                    passportCallback.onPassIdDataRead(passportDTO.passIdData!!)
             }
             passportCallback.onPassportReadFinish()
         }
     }
 
     data class PassportDTO(val passport: Passport? = null, val passIdData: PassIdData? = null, val cardServiceException: Exception? = null)
-
 
     interface PassportCallback {
         fun onPassportReadStart()

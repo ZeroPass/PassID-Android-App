@@ -359,7 +359,7 @@ private constructor() {
             val tagList = comFile!!.tagList
             dgNumbers.addAll(toDataGroupList(tagList)!!)
         }
-        Collections.sort(dgNumbers) /* NOTE: need to sort it, since we get keys as a set. */
+        dgNumbers.sort() /* NOTE: need to sort it, since we get keys as a set. */
 
         Log.i(TAG, "Found DGs: $dgNumbers")
 
@@ -500,7 +500,7 @@ private constructor() {
      */
     fun setEACPublicKey(eacPublicKey: PublicKey) {
         val chipAuthenticationPublicKeyInfo = ChipAuthenticationPublicKeyInfo(eacPublicKey)
-        val dg14File = DG14File(Arrays.asList(*arrayOf<SecurityInfo>(chipAuthenticationPublicKeyInfo)))
+        val dg14File = DG14File(listOf(*arrayOf<SecurityInfo>(chipAuthenticationPublicKeyInfo)))
         putFile(PassportService.EF_DG14, dg14File.encoded)
     }
 
@@ -595,10 +595,10 @@ private constructor() {
                     comFile!!.insertTag(tag.toInt() and 0xFF)
                 }
             }
-            if (this.docSigningPrivateKey != null) {
-                sodFile = SODFile(digestAlg, signatureAlg, dgHashes, this.docSigningPrivateKey, cert)
+            sodFile = if (this.docSigningPrivateKey != null) {
+                SODFile(digestAlg, signatureAlg, dgHashes, this.docSigningPrivateKey, cert)
             } else {
-                sodFile = SODFile(digestAlg, signatureAlg, dgHashes, signature, cert)
+                SODFile(digestAlg, signatureAlg, dgHashes, signature, cert)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -855,7 +855,6 @@ private constructor() {
             e.printStackTrace()
             verificationStatus.setCS(VerificationStatus.Verdict.FAILED, "Signature failed", EMPTY_CERTIFICATE_CHAIN)
         }
-
     }
 
     /**
@@ -982,7 +981,6 @@ private constructor() {
 
     }
 
-
     @Throws(NoSuchAlgorithmException::class)
     private fun getDigest(digestAlgorithm: String): MessageDigest? {
         if (digest != null) {
@@ -1057,10 +1055,10 @@ private constructor() {
         val signature = sodFile!!.encryptedDigest
 
         var digestEncryptionAlgorithm: String? = null
-        try {
-            digestEncryptionAlgorithm = sodFile!!.digestEncryptionAlgorithm
+        digestEncryptionAlgorithm = try {
+            sodFile!!.digestEncryptionAlgorithm
         } catch (e: Exception) {
-            digestEncryptionAlgorithm = null
+            null
         }
 
         /*
@@ -1070,17 +1068,16 @@ private constructor() {
         if (digestEncryptionAlgorithm == null) {
             val digestAlg = sodFile!!.signerInfoDigestAlgorithm
             var digest: MessageDigest? = null
-            try {
-                digest = MessageDigest.getInstance(digestAlg)
+            digest = try {
+                MessageDigest.getInstance(digestAlg)
             } catch (e: Exception) {
-                digest = MessageDigest.getInstance(digestAlg, BC_PROVIDER)
+                MessageDigest.getInstance(digestAlg, BC_PROVIDER)
             }
 
             digest!!.update(eContent)
             val digestBytes = digest.digest()
             return Arrays.equals(digestBytes, signature)
         }
-
 
         /* For RSA_SA_PSS
          *    1. the default hash is SHA1,
@@ -1124,7 +1121,6 @@ private constructor() {
         for (i in 0..512) {
             try {
                 var sig: Signature? = null
-
                 sig = Signature.getInstance(digestEncryptionAlgorithm, BC_PROVIDER)
                 if (digestEncryptionAlgorithm.endsWith("withRSA/PSS")) {
                     val mgf1ParameterSpec = MGF1ParameterSpec("SHA-256")
@@ -1141,14 +1137,11 @@ private constructor() {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-
         }
         return 0//Unable to find it
     }
 
-
     ////////////////////////////
-
     @Throws(IOException::class, CardServiceException::class, GeneralSecurityException::class)
     private fun doPACE(ps: PassportService, mrzInfo: MRZInfo): PACEResult? {
         var paceResult: PACEResult? = null
@@ -1168,13 +1161,10 @@ private constructor() {
 
             if (paceInfos.size > 0) {
                 val paceInfo = paceInfos.iterator().next()
-                paceResult = ps.doPACE(paceKeySpec, paceInfo.objectIdentifier, PACEInfo.toParameterSpec(paceInfo.parameterId))
+                paceResult = ps.doPACE(paceKeySpec, paceInfo.objectIdentifier, PACEInfo.toParameterSpec(paceInfo.parameterId), null)
             }
         } finally {
-            if (isCardAccessFile != null) {
-                isCardAccessFile.close()
-                isCardAccessFile = null
-            }
+            isCardAccessFile?.close()
         }
         return paceResult
     }
@@ -1285,10 +1275,7 @@ private constructor() {
             isComFile = ps.getInputStream(PassportService.EF_COM)
             return LDSFileUtil.getLDSFile(PassportService.EF_COM, isComFile) as COMFile
         } finally {
-            if (isComFile != null) {
-                isComFile.close()
-                isComFile = null
-            }
+            isComFile?.close()
         }
     }
 
@@ -1300,10 +1287,7 @@ private constructor() {
             isSodFile = ps.getInputStream(PassportService.EF_SOD)
             return LDSFileUtil.getLDSFile(PassportService.EF_SOD, isSodFile) as SODFile
         } finally {
-            if (isSodFile != null) {
-                isSodFile.close()
-                isSodFile = null
-            }
+            isSodFile?.close()
         }
     }
 
@@ -1315,10 +1299,7 @@ private constructor() {
             isDG1 = ps.getInputStream(PassportService.EF_DG1)
             return LDSFileUtil.getLDSFile(PassportService.EF_DG1, isDG1) as DG1File
         } finally {
-            if (isDG1 != null) {
-                isDG1.close()
-                isDG1 = null
-            }
+            isDG1?.close()
         }
     }
 
@@ -1330,10 +1311,7 @@ private constructor() {
             isDG2 = ps.getInputStream(PassportService.EF_DG2)
             return LDSFileUtil.getLDSFile(PassportService.EF_DG2, isDG2) as DG2File
         } finally {
-            if (isDG2 != null) {
-                isDG2.close()
-                isDG2 = null
-            }
+            isDG2?.close()
         }
     }
 
@@ -1345,10 +1323,7 @@ private constructor() {
             isDG3 = ps.getInputStream(PassportService.EF_DG3)
             return LDSFileUtil.getLDSFile(PassportService.EF_DG3, isDG3) as DG3File
         } finally {
-            if (isDG3 != null) {
-                isDG3.close()
-                isDG3 = null
-            }
+            isDG3?.close()
         }
     }
 
@@ -1360,10 +1335,7 @@ private constructor() {
             isDG5 = ps.getInputStream(PassportService.EF_DG5)
             return LDSFileUtil.getLDSFile(PassportService.EF_DG5, isDG5) as DG5File
         } finally {
-            if (isDG5 != null) {
-                isDG5.close()
-                isDG5 = null
-            }
+            isDG5?.close()
         }
     }
 
@@ -1375,10 +1347,7 @@ private constructor() {
             isDG7 = ps.getInputStream(PassportService.EF_DG7)
             return LDSFileUtil.getLDSFile(PassportService.EF_DG7, isDG7) as DG7File
         } finally {
-            if (isDG7 != null) {
-                isDG7.close()
-                isDG7 = null
-            }
+            isDG7?.close()
         }
     }
 
@@ -1390,10 +1359,7 @@ private constructor() {
             isDG11 = ps.getInputStream(PassportService.EF_DG11)
             return LDSFileUtil.getLDSFile(PassportService.EF_DG11, isDG11) as DG11File
         } finally {
-            if (isDG11 != null) {
-                isDG11.close()
-                isDG11 = null
-            }
+            isDG11?.close()
         }
     }
 
@@ -1405,10 +1371,7 @@ private constructor() {
             isDG12 = ps.getInputStream(PassportService.EF_DG12)
             return LDSFileUtil.getLDSFile(PassportService.EF_DG12, isDG12) as DG12File
         } finally {
-            if (isDG12 != null) {
-                isDG12.close()
-                isDG12 = null
-            }
+            isDG12?.close()
         }
     }
 
@@ -1420,10 +1383,7 @@ private constructor() {
             isDG14 = ps.getInputStream(PassportService.EF_DG14)
             return LDSFileUtil.getLDSFile(PassportService.EF_DG14, isDG14) as DG14File
         } finally {
-            if (isDG14 != null) {
-                isDG14.close()
-                isDG14 = null
-            }
+            isDG14?.close()
         }
     }
 
@@ -1435,10 +1395,7 @@ private constructor() {
             isDG15 = ps.getInputStream(PassportService.EF_DG15)
             return LDSFileUtil.getLDSFile(PassportService.EF_DG15, isDG15) as DG15File
         } finally {
-            if (isDG15 != null) {
-                isDG15.close()
-                isDG15 = null
-            }
+            isDG15?.close()
         }
     }
 
@@ -1450,10 +1407,7 @@ private constructor() {
             isEF_CVCA = ps.getInputStream(PassportService.EF_CVCA)
             return LDSFileUtil.getLDSFile(PassportService.EF_CVCA, isEF_CVCA) as CVCAFile
         } finally {
-            if (isEF_CVCA != null) {
-                isEF_CVCA.close()
-                isEF_CVCA = null
-            }
+            isEF_CVCA?.close()
         }
     }
 

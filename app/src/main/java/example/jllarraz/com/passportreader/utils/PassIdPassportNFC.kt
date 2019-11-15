@@ -44,7 +44,7 @@ private constructor() {
      * @since 0.4.9
      */
     /* The feature status has been created in constructor. */
-    val features: FeatureStatus
+    private val features: FeatureStatus = FeatureStatus()
 
     /**
      * Gets the verification status thus far.
@@ -53,7 +53,7 @@ private constructor() {
      *
      * @since 0.4.9
      */
-    val verificationStatus: VerificationStatus
+    val verificationStatus: VerificationStatus = VerificationStatus()
 
     private var service: PassportService?=null
 
@@ -69,12 +69,6 @@ private constructor() {
         private set
 
 
-    init {
-        this.features = FeatureStatus()
-        this.verificationStatus = VerificationStatus()
-    }
-
-
     /**
      * Creates a document by reading it from a service.
      *
@@ -87,7 +81,7 @@ private constructor() {
      */
     @Throws(CardServiceException::class, GeneralSecurityException::class, PassIdPassportNFCError::class)
     constructor(ps: PassportService?, mrzInfo: MRZInfo, challange: PassIdProtoChallenge?) : this() {
-        requireNotNull(ps) { "Service cannot be null" }
+        requireNotNull(ps) { "Passport Service cannot be null" }
 
         this.service = ps
 
@@ -114,7 +108,6 @@ private constructor() {
             }
 
             hasSAC = features.hasSAC() == FeatureStatus.Verdict.PRESENT
-
             if (hasSAC) {
                 try {
                     paceResult = doPACE(ps, mrzInfo)
@@ -156,7 +149,6 @@ private constructor() {
 
         /* If we have to do BAC, try to do BAC. */
         val hasBAC = features.hasBAC() == FeatureStatus.Verdict.PRESENT
-
         if (hasBAC && !(hasSAC && isSACSucceeded)) {
             val bacKey = BACKey(mrzInfo.documentNumber, mrzInfo.dateOfBirth, mrzInfo.dateOfExpiry)
             val triedBACEntries = ArrayList<BACKey>()
@@ -167,14 +159,10 @@ private constructor() {
             } catch (e: Exception) {
                 verificationStatus.setBAC(VerificationStatus.Verdict.FAILED, "BAC failed", triedBACEntries)
             }
-
         }
 
-
         /* Pre-read these files that are always present. */
-
         val dgNumbersAlreadyRead = TreeSet<Int>()
-
         try {
             sodFile = getSodFile(ps)
             dg1File = getDG1File(ps)
@@ -266,13 +254,10 @@ private constructor() {
 
             if (paceInfos.size > 0) {
                 val paceInfo = paceInfos.iterator().next()
-                paceResult = ps.doPACE(paceKeySpec, paceInfo.objectIdentifier, PACEInfo.toParameterSpec(paceInfo.parameterId))
+                paceResult = ps.doPACE(paceKeySpec, paceInfo.objectIdentifier, PACEInfo.toParameterSpec(paceInfo.parameterId), null)
             }
         } finally {
-            if (isCardAccessFile != null) {
-                isCardAccessFile.close()
-                isCardAccessFile = null
-            }
+            isCardAccessFile?.close()
         }
         return paceResult
     }
@@ -291,10 +276,7 @@ private constructor() {
             isSodFile = ps.getInputStream(PassportService.EF_SOD)
             return LDSFileUtil.getLDSFile(PassportService.EF_SOD, isSodFile) as SODFile
         } finally {
-            if (isSodFile != null) {
-                isSodFile.close()
-                isSodFile = null
-            }
+            isSodFile?.close()
         }
     }
 
@@ -306,10 +288,7 @@ private constructor() {
             isDG1 = ps.getInputStream(PassportService.EF_DG1)
             return LDSFileUtil.getLDSFile(PassportService.EF_DG1, isDG1) as DG1File
         } finally {
-            if (isDG1 != null) {
-                isDG1.close()
-                isDG1 = null
-            }
+            isDG1?.close()
         }
     }
 
@@ -321,10 +300,7 @@ private constructor() {
             isDG14 = ps.getInputStream(PassportService.EF_DG14)
             return LDSFileUtil.getLDSFile(PassportService.EF_DG14, isDG14) as DG14File
         } finally {
-            if (isDG14 != null) {
-                isDG14.close()
-                isDG14 = null
-            }
+            isDG14?.close()
         }
     }
 
@@ -336,10 +312,7 @@ private constructor() {
             isDG15 = ps.getInputStream(PassportService.EF_DG15)
             return LDSFileUtil.getLDSFile(PassportService.EF_DG15, isDG15) as DG15File
         } finally {
-            if (isDG15 != null) {
-                isDG15.close()
-                isDG15 = null
-            }
+            isDG15?.close()
         }
     }
 
