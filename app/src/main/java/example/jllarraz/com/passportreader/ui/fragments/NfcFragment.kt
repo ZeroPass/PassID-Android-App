@@ -18,16 +18,13 @@ import android.widget.Toast
 import net.sf.scuba.smartcards.CardServiceException
 import net.sf.scuba.smartcards.ISO7816
 
-
 import org.jmrtd.AccessDeniedException
 import org.jmrtd.BACDeniedException
 import org.jmrtd.PACEException
 import org.jmrtd.lds.icao.MRZInfo
 import org.spongycastle.jce.provider.BouncyCastleProvider
 
-
 import java.security.Security
-
 
 import example.jllarraz.com.passportreader.R
 import example.jllarraz.com.passportreader.common.IntentData
@@ -61,7 +58,8 @@ class NfcFragment : androidx.fragment.app.Fragment() {
 
         val arguments = arguments
         if (!arguments!!.containsKey(IntentData.KEY_MRZ_INFO)) {
-            //error
+            Log.e(TAG, "Missing MRZ data argument")
+            activity?.finish()
             return
         }
         else if(arguments.containsKey(IntentData.KEY_PASSID_CHALLENGE)) {

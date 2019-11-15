@@ -73,8 +73,8 @@ class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFrag
                 setTitle(R.string.selection_activity_view)
             }
             else ->{
-                Log.w(TAG, "Unknown action '${intent.action}'")
-                onBackPressed()
+                Log.e(TAG, "Unknown action '${intent.action}'")
+                finish()
             }
         }
     }

@@ -37,7 +37,7 @@ class NfcActivity : androidx.fragment.app.FragmentActivity(), NfcFragment.NfcFra
         setContentView(R.layout.activity_nfc)
         val intent = intent
         if (!intent.hasExtra(IntentData.KEY_MRZ_INFO)) {
-            onBackPressed()
+            finish()
         }
 
         mrzInfo = intent.getSerializableExtra(IntentData.KEY_MRZ_INFO) as MRZInfo
