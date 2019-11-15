@@ -28,11 +28,6 @@ open class AppActivityWithOptionsMenu : AppCompatActivity() {
             super.onOptionsItemSelected(item)
         }
     }
-/*
-    android:parentActivityName=".ui.activities.MainActivity">
-    <meta-data
-    android:name="android.support.PARENT_ACTIVITY"
-    android:value=".ui.activities.MainActivity"/>*/
 
     fun showSettings() {
         startActivity(Intent(this, SettingsActivity::class.java))
