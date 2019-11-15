@@ -29,6 +29,7 @@ import example.jllarraz.com.passportreader.ui.fragments.SelectionFragment
 import kotlinx.coroutines.*
 import example.jllarraz.com.passportreader.data.PassIdData
 import android.view.Menu
+import androidx.core.content.edit
 import example.jllarraz.com.passportreader.proto.*
 import example.jllarraz.com.passportreader.ui.fragments.SuccessFragment
 
@@ -153,11 +154,11 @@ class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFrag
     }
 
     override fun onPassportRead(mrzInfo: MRZInfo) {
-        pfs.edit().apply(){
+        pfs.edit{
             putString(PF_DOC_NUM, mrzInfo.documentNumber)
             putString(PF_DOC_DOB, mrzInfo.dateOfBirth)
             putString(PF_DOC_DOE, mrzInfo.dateOfExpiry)
-        }.apply()
+        }
 
         val intent = Intent(this, NfcActivity::class.java)
         intent.putExtra(IntentData.KEY_MRZ_INFO, mrzInfo)
