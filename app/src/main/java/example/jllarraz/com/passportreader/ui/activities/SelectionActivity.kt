@@ -144,9 +144,6 @@ class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFrag
                             )
                         }
                     }
-                    Activity.RESULT_CANCELED -> {
-                        onBackPressed()
-                    }
                 }
             }
         }

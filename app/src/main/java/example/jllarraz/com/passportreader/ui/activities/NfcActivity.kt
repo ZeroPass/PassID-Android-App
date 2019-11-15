@@ -23,6 +23,8 @@ import example.jllarraz.com.passportreader.ui.fragments.PassportDetailsFragment
 import example.jllarraz.com.passportreader.ui.fragments.PassportPhotoFragment
 import example.jllarraz.com.passportreader.data.PassIdData
 import example.jllarraz.com.passportreader.proto.PassIdProtoChallenge
+import example.jllarraz.com.passportreader.ui.dialogs.ErrorAlert
+import example.jllarraz.com.passportreader.utils.PassIdUnsupportedPassport
 
 
 class NfcActivity : androidx.fragment.app.FragmentActivity(), NfcFragment.NfcFragmentListener, PassportDetailsFragment.PassportDetailsFragmentListener, PassportPhotoFragment.PassportPhotoFragmentListener {
@@ -124,8 +126,16 @@ class NfcActivity : androidx.fragment.app.FragmentActivity(), NfcFragment.NfcFra
     }
 
     override fun onCardException(cardException: Exception?) {
-        Toast.makeText(this, cardException.toString(), Toast.LENGTH_SHORT).show();
-        //onBackPressed();
+        if(cardException is PassIdUnsupportedPassport) {
+            val a = ErrorAlert(this)
+            a.setTitle("Unsupported Passport")
+            a.message = "This passport cannot be used for PassID"
+            a.setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+                finish()
+            }
+            a.show()
+        }
     }
 
     private fun showWirelessSettings() {
