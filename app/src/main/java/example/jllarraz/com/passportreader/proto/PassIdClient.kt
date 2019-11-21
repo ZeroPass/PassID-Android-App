@@ -83,6 +83,13 @@ class PassIdClient(url: String, timeout: Long = 5000) : Closeable {
         resetChallenge()
     }
 
+    @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
+    suspend fun requestGreeting() : String {
+        return retriableCall {
+            api.sayHello(session!!)
+        }
+    }
+
     private fun hasChallenge() : Boolean {
         return challenge != null
     }

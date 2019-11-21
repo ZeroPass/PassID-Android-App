@@ -130,6 +130,22 @@ class PassIdApi(url: String) : Closeable {
         return PassIdSession(uid, sessionKey, expires)
     }
 
+    /* API: passID.sayHello */
+    @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
+    suspend fun sayHello(s: PassIdSession) : String {
+        Log.d(TAG, "Requesting login session from server ...")
+
+        val mac  = s.getMAC("sayHello", s.uid.bytes())
+        val params = RpcParams.mapParams(listOfNotNull(
+            "uid" to s.uid.toBase64(),
+            "mac" to b64Encode(mac)
+        ).toMap())
+
+        val resp = transceive(getApiMethod("sayHello"), params)
+        requireRespField("msg",resp)
+        return resp.getValue("msg") as String
+    }
+
 /************************************************************************************************************/
 /************************************************************************************************************/
 

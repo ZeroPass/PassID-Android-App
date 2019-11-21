@@ -26,7 +26,7 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
     get() = Dispatchers.Main + job
 
     private lateinit var job: Job
-    private var passId: PassIdClient? = null
+    protected var passId: PassIdClient? = null
     protected lateinit var pfs: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,6 +40,7 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
     abstract suspend fun getPassIdData(challenge: PassIdProtoChallenge) : PassIdData
     abstract fun onRegisterSucceed(uid: UserId)
     abstract fun onLoginSucceed(uid: UserId)
+    abstract fun onRequestGreetingFinished(serverMsg: String)
 
 
     protected fun register() = passIdScope {
@@ -68,6 +69,14 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
         hideProgressBar()
         Log.i(TAG, "log-in succeeded")
         onLoginSucceed(passId!!.session!!.uid)
+    }
+
+    protected fun requestGreeting() = passIdScope {
+        showProgressBar("Please wait ...")
+        val server_msg = passId!!.requestGreeting()
+        hideProgressBar()
+        Log.d(TAG, "server returned msg $server_msg")
+        onRequestGreetingFinished(server_msg)
     }
 
     override fun onSupportNavigateUp(): Boolean {

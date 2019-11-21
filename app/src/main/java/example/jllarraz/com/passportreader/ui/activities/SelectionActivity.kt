@@ -97,11 +97,19 @@ class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFrag
     }
 
     override fun onLoginSucceed(uid: UserId) {
-        showSuccessScreen("Login Succeeded", uid)
+        requestGreeting()
     }
 
     override fun onRegisterSucceed(uid: UserId) {
-        showSuccessScreen("Registration Succeeded", uid)
+        requestGreeting()
+    }
+
+    override fun onRequestGreetingFinished(serverMsg: String) {
+        var title = "Registration Succeeded"
+        if(intent.action == ACTION_LOGIN) {
+            title = "Login Succeeded"
+        }
+        showSuccessScreen(title, serverMsg, passId!!.session!!.uid)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -170,9 +178,9 @@ class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFrag
         startActivityForResult(intent, REQUEST_MRZ)
     }
 
-    private fun showSuccessScreen(title: String, uid: UserId) {
+    private fun showSuccessScreen(title: String, serverMsg: String, uid: UserId) {
         supportFragmentManager.beginTransaction()
-            .replace(R.id.container, SuccessFragment.newInstance(title, uid))
+            .replace(R.id.container, SuccessFragment.newInstance(title, serverMsg, uid))
             .commitAllowingStateLoss()
     }
 

@@ -22,14 +22,16 @@ class SuccessFragment :  androidx.fragment.app.Fragment() {
 
         activity?.title = ""
         title!!.text = arguments?.getString("title")
+        serverMsg!!.text = arguments?.getString("serverMsg")
         uid!!.text = arguments?.getParcelable<UserId>("uid")!!.hex()
     }
 
     companion object {
-        fun newInstance(title: String, uid: UserId): SuccessFragment {
+        fun newInstance(title: String, serverMsg: String, uid: UserId): SuccessFragment {
             val myFragment = SuccessFragment()
             val args = Bundle()
             args.putString("title", title)
+            args.putString("serverMsg", serverMsg)
             args.putParcelable("uid", uid)
             myFragment.arguments = args
             return myFragment
