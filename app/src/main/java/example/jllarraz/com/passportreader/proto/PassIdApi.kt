@@ -20,8 +20,6 @@ import java.io.Closeable
 import java.util.*
 import java.util.concurrent.Future
 
-
-data class PassIdSession(val uid: UserId, val key: SessionKey, val expires: Date)
 data class PassIdApiError(val code: Int, override val message: String, val data: Any? = null): Exception(message)
 
 class PassIdApi(url: String) : Closeable {
