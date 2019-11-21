@@ -19,8 +19,8 @@ object StringUtils {
         hexString.substring(it * 2, it * 2 + 2).toInt(16).toByte()
     }
 
-    fun b64Encode(bytes: ByteArray) : String = Base64.encodeToString(bytes, Base64.DEFAULT)
-    fun b64Decode(b64String: String): ByteArray = Base64.decode(b64String, Base64.DEFAULT)
+    fun b64Encode(bytes: ByteArray) : String = Base64.encodeToString(bytes, Base64.NO_WRAP)
+    fun b64Decode(b64String: String): ByteArray = Base64.decode(b64String, Base64.NO_WRAP)
 
     fun isValidHttpUrl(url: String): Boolean {
         val valid = Patterns.WEB_URL.matcher(url).matches()
