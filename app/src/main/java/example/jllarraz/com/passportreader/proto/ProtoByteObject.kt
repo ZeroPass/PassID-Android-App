@@ -28,6 +28,10 @@ abstract class ProtoByteObject(data: ByteArray) : Parcelable {
         return bytesToHex(data)
     }
 
+    fun bytes() : ByteArray {
+        return data
+    }
+
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeByteArray(data)
     }
