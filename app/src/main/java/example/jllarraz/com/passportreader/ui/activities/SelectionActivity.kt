@@ -119,6 +119,7 @@ class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFrag
         }
         when (requestCode) {
             REQUEST_MRZ -> {
+                hideProgressBar()
                 when (resultCode) {
                     Activity.RESULT_OK -> {
                         onPassportRead(data.getSerializableExtra(IntentData.KEY_MRZ_INFO) as MRZInfo)
@@ -174,6 +175,7 @@ class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFrag
     }
 
     override fun onMrzRequest() {
+        showProgressBar()
         val intent = Intent(this, CameraActivity::class.java)
         startActivityForResult(intent, REQUEST_MRZ)
     }
