@@ -68,6 +68,9 @@ dependencies {
     //WSQ
     implementation 'com.github.mhshams:jnbis:2.0.2'
 
+    // JPEG-2000
+    implementation 'com.gemalto.jp2:jp2-android:1.0'
+
     //Input data Validator
     implementation 'com.mobsandgeeks:android-saripaar:2.0.3'
 
