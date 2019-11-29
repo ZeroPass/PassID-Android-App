@@ -56,11 +56,11 @@ dependencies {
 
     // ML Kit dependencies
     implementation 'com.google.firebase:firebase-core:17.2.1'
-    implementation 'com.google.firebase:firebase-ml-common:22.0.0'
-    implementation 'com.google.firebase:firebase-ml-vision:24.0.0'
+    implementation 'com.google.firebase:firebase-ml-common:22.0.1'
+    implementation 'com.google.firebase:firebase-ml-vision:24.0.1'
 
     //NFC Passport
-    implementation 'org.jmrtd:jmrtd:0.7.15'
+    implementation 'org.jmrtd:jmrtd:0.7.16'
     implementation 'com.madgag.spongycastle:prov:1.58.0.0'
     implementation 'net.sf.scuba:scuba-sc-android:0.0.20'
     implementation group: 'org.ejbca.cvc', name: 'cert-cvc', version: '1.4.6'
