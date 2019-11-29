@@ -161,7 +161,9 @@ class NfcActivity : androidx.fragment.app.FragmentActivity(), NfcFragment.NfcFra
 
 
     override fun onImageSelected(bitmap: Bitmap?) {
-        showFragmentPhoto(bitmap!!)
+        if (bitmap != null) {
+            showFragmentPhoto(bitmap)
+        }
     }
 
     companion object {
