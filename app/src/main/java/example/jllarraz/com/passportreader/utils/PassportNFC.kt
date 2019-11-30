@@ -27,7 +27,6 @@ import java.security.SecureRandom
 import java.security.Security
 import java.security.Signature
 import java.security.cert.Certificate
-import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
 import java.security.interfaces.ECPublicKey
 import java.security.interfaces.RSAPublicKey
@@ -35,7 +34,6 @@ import java.security.spec.MGF1ParameterSpec
 import java.security.spec.PSSParameterSpec
 import java.util.ArrayList
 import java.util.Arrays
-import java.util.Collections
 import java.util.Random
 import java.util.TreeMap
 import java.util.TreeSet
@@ -55,11 +53,9 @@ import org.jmrtd.lds.ChipAuthenticationPublicKeyInfo
 import org.jmrtd.lds.LDSFileUtil
 import org.jmrtd.lds.PACEInfo
 import org.jmrtd.lds.SODFile
-import org.jmrtd.lds.SecurityInfo
 import org.jmrtd.lds.icao.COMFile
 import org.jmrtd.lds.icao.DG11File
 import org.jmrtd.lds.icao.DG12File
-import org.jmrtd.lds.icao.DG14File
 import org.jmrtd.lds.icao.DG15File
 import org.jmrtd.lds.icao.DG1File
 import org.jmrtd.lds.icao.DG2File
@@ -116,43 +112,6 @@ private constructor() {
      */
     var trustManager: MRTDTrustStore?=null
 
-    /**
-     * Gets the document signing private key, or null if not present.
-     *
-     * @return a private key or null
-     */
-    /**
-     * Sets the document signing private key.
-     *
-     * @param docSigningPrivateKey a private key
-     */
-    var docSigningPrivateKey: PrivateKey? = null
-        set(docSigningPrivateKey) {
-            field = docSigningPrivateKey
-            updateCOMSODFile(null)
-        }
-
-    /**
-     * Gets the CVCA certificate.
-     *
-     * @return a CV certificate or null
-     */
-    /**
-     * Sets the CVCA certificate.
-     *
-     * @param cert the CV certificate
-     */
-    var cvCertificate: CardVerifiableCertificate? = null
-        set(cert) {
-            field = cert
-            try {
-                val cvcaFile = CVCAFile(PassportService.EF_CVCA, cvCertificate!!.holderReference.name)
-                putFile(PassportService.EF_CVCA, cvcaFile.encoded)
-            } catch (ce: CertificateException) {
-                ce.printStackTrace()
-            }
-
-        }
 
     /**
      * Gets the private key for EAC, or null if not present.
@@ -201,7 +160,7 @@ private constructor() {
         private set
     var dg12File: DG12File? = null
         private set
-    var dg14File: DG14File? = null
+    var dg14File: DG14FileView? = null
         private set
     var dg15File: DG15File? = null
         private set
@@ -321,7 +280,6 @@ private constructor() {
             }
 
         }
-
 
         /* Pre-read these files that are always present. */
 
@@ -444,7 +402,6 @@ private constructor() {
             verificationStatus.setAA(VerificationStatus.Verdict.NOT_PRESENT, "AA is not supported")
         }
 
-
         try {
             dg2File = getDG2File(ps)
         } catch (e: Exception) {
@@ -469,7 +426,6 @@ private constructor() {
             e.printStackTrace()
         }
 
-
         try {
             dg11File = getDG11File(ps)
         } catch (e: Exception) {
@@ -481,37 +437,6 @@ private constructor() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
-    }
-
-    /**
-     * Sets the document signing certificate.
-     *
-     * @param docSigningCertificate a certificate
-     */
-    fun setDocSigningCertificate(docSigningCertificate: X509Certificate) {
-        updateCOMSODFile(docSigningCertificate)
-    }
-
-    /**
-     * Sets the public key for EAC.
-     *
-     * @param eacPublicKey a public key
-     */
-    fun setEACPublicKey(eacPublicKey: PublicKey) {
-        val chipAuthenticationPublicKeyInfo = ChipAuthenticationPublicKeyInfo(eacPublicKey)
-        val dg14File = DG14File(listOf(*arrayOf<SecurityInfo>(chipAuthenticationPublicKeyInfo)))
-        putFile(PassportService.EF_DG14, dg14File.encoded)
-    }
-
-    /**
-     * Sets the public key for AA.
-     *
-     * @param aaPublicKey a public key
-     */
-    fun setAAPublicKey(aaPublicKey: PublicKey) {
-        val dg15file = DG15File(aaPublicKey)
-        putFile(PassportService.EF_DG15, dg15file.encoded)
     }
 
     /**
@@ -544,67 +469,6 @@ private constructor() {
         return verificationStatus
     }
 
-    /**
-     * Inserts a file into this document, and updates EF_COM and EF_SOd accordingly.
-     *
-     * @param fid the FID of the new file
-     * @param bytes the contents of the new file
-     */
-    private fun putFile(fid: Short, bytes: ByteArray?) {
-        if (bytes == null) {
-            return
-        }
-        try {
-            //lds.add(fid, new ByteArrayInputStream(bytes), bytes.length);
-            // FIXME: is this necessary?
-            if (fid != PassportService.EF_COM && fid != PassportService.EF_SOD && fid != PassportService.EF_CVCA) {
-                updateCOMSODFile(null)
-            }
-        } catch (ioe: Exception) {
-            ioe.printStackTrace()
-        }
-
-        verificationStatus.setAll(VerificationStatus.Verdict.UNKNOWN, "Unknown") // FIXME: why all?
-    }
-
-    /**
-     * Updates EF_COM and EF_SOd using a new document signing certificate.
-     *
-     * @param newCertificate a certificate
-     */
-    private fun updateCOMSODFile(newCertificate: X509Certificate?) {
-        try {
-            val digestAlg = sodFile!!.digestAlgorithm
-            val signatureAlg = sodFile!!.digestEncryptionAlgorithm
-            val cert = newCertificate ?: sodFile!!.docSigningCertificate
-            val signature = sodFile!!.encryptedDigest
-            val dgHashes = TreeMap<Int, ByteArray>()
-
-            val dgFids = LDSFileUtil.getDataGroupNumbers(sodFile)
-            val digest: MessageDigest
-            digest = MessageDigest.getInstance(digestAlg)
-            for (fid in dgFids) {
-                if (fid != PassportService.EF_COM.toInt() && fid != PassportService.EF_SOD.toInt() && fid != PassportService.EF_CVCA.toInt()) {
-                    val dg = getDG(fid)
-                    if (dg == null) {
-                        Log.w(TAG, "Could not get input stream for " + Integer.toHexString(fid))
-                        continue
-                    }
-                    val tag = dg.encoded[0]
-                    dgHashes[LDSFileUtil.lookupDataGroupNumberByTag(tag.toInt())] = digest.digest(dg.encoded)
-                    comFile!!.insertTag(tag.toInt() and 0xFF)
-                }
-            }
-            sodFile = if (this.docSigningPrivateKey != null) {
-                SODFile(digestAlg, signatureAlg, dgHashes, this.docSigningPrivateKey, cert)
-            } else {
-                SODFile(digestAlg, signatureAlg, dgHashes, signature, cert)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-    }
 
     ///////////////////////////////////
 
@@ -928,15 +792,6 @@ private constructor() {
         var dgBytes: ByteArray? = null
         try {
             /*InputStream dgIn = null;
-            int length = lds.getLength(fid);
-            if (length > 0) {
-                dgBytes = new byte[length];
-                dgIn = lds.getInputStream(fid);
-                DataInputStream dgDataIn = new DataInputStream(dgIn);
-                dgDataIn.readFully(dgBytes);
-            }*/
-
-            val abstractTaggedLDSFile = getDG(fid.toInt())
             if (abstractTaggedLDSFile != null) {
                 dgBytes = abstractTaggedLDSFile.encoded
             }
@@ -1176,8 +1031,8 @@ private constructor() {
     }
 
 
-    private fun doEACCA(ps: PassportService, mrzInfo: MRZInfo, dg14File: DG14File?, sodFile: SODFile?): List<EACCAResult> {
-        if (dg14File == null) {
+    private fun doEACCA(ps: PassportService, mrzInfo: MRZInfo, dg14FileFile: DG14FileView?, sodFile: SODFile?): List<EACCAResult> {
+        if (dg14FileFile == null) {
             throw NullPointerException("dg14File is null")
         }
 
@@ -1191,7 +1046,7 @@ private constructor() {
         var chipAuthenticationInfo: ChipAuthenticationInfo? = null
 
         val chipAuthenticationPublicKeyInfos = ArrayList<ChipAuthenticationPublicKeyInfo>()
-        val securityInfos = dg14File.securityInfos
+        val securityInfos = dg14FileFile.securityInfos
         val securityInfoIterator = securityInfos.iterator()
         while (securityInfoIterator.hasNext()) {
             val securityInfo = securityInfoIterator.next()
@@ -1376,12 +1231,12 @@ private constructor() {
     }
 
     @Throws(CardServiceException::class, IOException::class)
-    private fun getDG14File(ps: PassportService): DG14File {
+    private fun getDG14File(ps: PassportService): DG14FileView {
         // Basic data
         var isDG14: InputStream? = null
         try {
             isDG14 = ps.getInputStream(PassportService.EF_DG14)
-            return LDSFileUtil.getLDSFile(PassportService.EF_DG14, isDG14) as DG14File
+            return DG14FileView(isDG14)
         } finally {
             isDG14?.close()
         }

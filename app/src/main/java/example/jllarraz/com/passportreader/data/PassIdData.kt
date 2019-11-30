@@ -2,11 +2,11 @@ package example.jllarraz.com.passportreader.data
 
 import android.os.Parcel
 import android.os.Parcelable
+import example.jllarraz.com.passportreader.utils.DG14FileView
 
 import org.jmrtd.lds.LDSFile
 import org.jmrtd.lds.SODFile
 import org.jmrtd.lds.icao.DG1File
-import org.jmrtd.lds.icao.DG14File
 import org.jmrtd.lds.icao.DG15File
 import java.io.ByteArrayInputStream
 
@@ -16,7 +16,7 @@ class PassIdData : Parcelable {
 
     var sodFile: SODFile? = null
     var dg1File: DG1File? = null
-    var dg14File: DG14File? = null
+    var dg14File: DG14FileView? = null
     var dg15File: DG15File? = null
     var ccSignatures: List<ByteArray>? = null // signatures made over chunks of challenge
 
@@ -32,7 +32,7 @@ class PassIdData : Parcelable {
         }
 
         if (`in`.readInt() == 1) {
-            dg14File = `in`.readDGFile{ DG14File(it) }
+            dg14File = `in`.readDGFile{ DG14FileView(it) }
         }
 
         if (`in`.readInt() == 1) {

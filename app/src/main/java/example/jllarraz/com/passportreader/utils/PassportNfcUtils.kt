@@ -256,17 +256,4 @@ object PassportNfcUtils {
 
         return chain
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

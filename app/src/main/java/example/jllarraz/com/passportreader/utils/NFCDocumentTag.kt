@@ -83,7 +83,6 @@ class NFCDocumentTag {
                             //Don't do anything
                             e.printStackTrace()
                         }
-
                     }
 
                     //Portrait

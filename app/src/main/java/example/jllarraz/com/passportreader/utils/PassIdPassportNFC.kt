@@ -23,7 +23,6 @@ import org.jmrtd.lds.LDSFileUtil
 import org.jmrtd.lds.PACEInfo
 import org.jmrtd.lds.SODFile
 import org.jmrtd.lds.icao.COMFile
-import org.jmrtd.lds.icao.DG14File
 import org.jmrtd.lds.icao.DG15File
 import org.jmrtd.lds.icao.DG1File
 import org.jmrtd.lds.icao.MRZInfo
@@ -62,7 +61,7 @@ private constructor() {
         private set
     var dg1File: DG1File? = null
         private set
-    var dg14File: DG14File? = null
+    var dg14File: DG14FileView? = null
         private set
     var dg15File: DG15File? = null
         private set
@@ -293,12 +292,12 @@ private constructor() {
     }
 
     @Throws(CardServiceException::class, IOException::class)
-    private fun getDG14File(ps: PassportService): DG14File {
+    private fun getDG14File(ps: PassportService): DG14FileView {
         // Basic data
         var isDG14: InputStream? = null
         try {
             isDG14 = ps.getInputStream(PassportService.EF_DG14)
-            return LDSFileUtil.getLDSFile(PassportService.EF_DG14, isDG14) as DG14File
+            return DG14FileView(isDG14)
         } finally {
             isDG14?.close()
         }

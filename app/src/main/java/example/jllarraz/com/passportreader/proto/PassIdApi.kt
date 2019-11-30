@@ -2,6 +2,7 @@ package example.jllarraz.com.passportreader.proto
 
 import android.util.Log
 import example.jllarraz.com.passportreader.PassIdApp
+import example.jllarraz.com.passportreader.utils.DG14FileView
 import info.laht.yajrpc.RpcError
 import info.laht.yajrpc.RpcParams
 import info.laht.yajrpc.RpcNoParams
@@ -10,7 +11,6 @@ import kotlinx.coroutines.*
 import java.lang.Exception
 
 import org.jmrtd.lds.SODFile
-import org.jmrtd.lds.icao.DG14File
 import org.jmrtd.lds.icao.DG15File
 
 import example.jllarraz.com.passportreader.utils.StringUtils.b64Encode
@@ -87,7 +87,7 @@ class PassIdApi(url: String) : Closeable {
 
     /* API: passID.register */
     @Throws(PassIdApiError::class, RpcConnectionTimeout::class, RpcConnectionError::class)
-    suspend fun register(dg15: DG15File, sod: SODFile, cid: CID, csigs: List<ByteArray>, dg14: DG14File? = null): PassIdSession {
+    suspend fun register(dg15: DG15File, sod: SODFile, cid: CID, csigs: List<ByteArray>, dg14: DG14FileView? = null): PassIdSession {
         Log.d(TAG, "Requesting registration session from server ...")
 
         val params = RpcParams.mapParams(listOfNotNull(

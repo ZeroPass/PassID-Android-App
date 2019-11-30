@@ -2,7 +2,7 @@ package example.jllarraz.com.passportreader.proto
 
 import android.util.Log
 import example.jllarraz.com.passportreader.data.PassIdData
-import org.jmrtd.lds.icao.DG14File
+import example.jllarraz.com.passportreader.utils.DG14FileView
 import org.jmrtd.lds.icao.DG1File
 import java.io.Closeable
 
@@ -41,7 +41,7 @@ class PassIdClient(url: String, timeout: Long = 5000) : Closeable {
         challenge = retriableCall{api.getChallenge()}
         val data = onRequirePassIdData(challenge!!)
 
-        var dg14File: DG14File? = null
+        var dg14File: DG14FileView? = null
         if(data.dg15File!!.publicKey.algorithm != "RSA") {
             dg14File = data.dg14File!! // TODO: throw PassIdProtoError
         }
