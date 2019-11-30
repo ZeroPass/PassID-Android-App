@@ -56,7 +56,7 @@
     <string name="doc_expiry">Expiry Date: %1s</string>
 
     <string name="selection_activity_login">Login</string>
-    <string name="selection_activity_register">Login</string>
+    <string name="selection_activity_register">Register</string>
     <string name="selection_activity_view">View Passport</string>
     <string name="selection_title">Data Entry</string>
     <string name="selection_manual">Manual</string>
