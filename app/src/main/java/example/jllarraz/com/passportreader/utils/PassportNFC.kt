@@ -791,7 +791,7 @@ private constructor() {
         /* Read the DG. */
         var dgBytes: ByteArray? = null
         try {
-            /*InputStream dgIn = null;
+            val abstractTaggedLDSFile = getDG(dgNumber)
             if (abstractTaggedLDSFile != null) {
                 dgBytes = abstractTaggedLDSFile.encoded
             }
@@ -1031,8 +1031,8 @@ private constructor() {
     }
 
 
-    private fun doEACCA(ps: PassportService, mrzInfo: MRZInfo, dg14FileFile: DG14FileView?, sodFile: SODFile?): List<EACCAResult> {
-        if (dg14FileFile == null) {
+    private fun doEACCA(ps: PassportService, mrzInfo: MRZInfo, dg14File: DG14FileView?, sodFile: SODFile?): List<EACCAResult> {
+        if (dg14File == null) {
             throw NullPointerException("dg14File is null")
         }
 
@@ -1046,7 +1046,7 @@ private constructor() {
         var chipAuthenticationInfo: ChipAuthenticationInfo? = null
 
         val chipAuthenticationPublicKeyInfos = ArrayList<ChipAuthenticationPublicKeyInfo>()
-        val securityInfos = dg14FileFile.securityInfos
+        val securityInfos = dg14File.securityInfos
         val securityInfoIterator = securityInfos.iterator()
         while (securityInfoIterator.hasNext()) {
             val securityInfo = securityInfoIterator.next()
