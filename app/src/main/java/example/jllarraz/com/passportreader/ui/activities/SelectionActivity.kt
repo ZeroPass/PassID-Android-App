@@ -41,14 +41,12 @@ class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFrag
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        val actionName = handleAction()
         if (null == savedInstanceState) {
             supportFragmentManager.beginTransaction()
-                .replace(R.id.container, SelectionFragment(), TAG_SELECTION_FRAGMENT)
-                .commit()
+                    .replace(R.id.container, SelectionFragment.newInstance(actionName), TAG_SELECTION_FRAGMENT)
+                    .commit()
         }
-
-        handleAction()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -59,24 +57,27 @@ class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFrag
         return res
     }
 
-    private fun handleAction() {
-        when {
-            intent.action == ACTION_REGISTER -> {
+    private fun handleAction(): String? {
+        when (intent.action) {
+            ACTION_REGISTER -> {
                 setTitle(R.string.selection_activity_register)
                 register()
+                return title.toString()
             }
-            intent.action == ACTION_LOGIN -> {
+            ACTION_LOGIN -> {
                 setTitle(R.string.selection_activity_login)
                 login()
+                return title.toString()
             }
-            intent.action == ACTION_VIEW_PASSPORT -> {
+            ACTION_VIEW_PASSPORT -> {
                 setTitle(R.string.selection_activity_view)
             }
-            else ->{
+            else -> {
                 Log.e(TAG, "Unknown action '${intent.action}'")
                 finish()
             }
         }
+        return null
     }
 
     /**
@@ -125,24 +126,15 @@ class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFrag
                         onPassportRead(data.getSerializableExtra(IntentData.KEY_MRZ_INFO) as MRZInfo)
                     }
                     Activity.RESULT_CANCELED -> {
-                        val fragmentByTag = supportFragmentManager.findFragmentByTag(TAG_SELECTION_FRAGMENT)
-                        if (fragmentByTag is SelectionFragment) {
-                            fragmentByTag.selectManualToggle()
-                        }
+                        getFragment()?.selectManualToggle()
                     }
                     else -> {
-                        val fragmentByTag = supportFragmentManager.findFragmentByTag(TAG_SELECTION_FRAGMENT)
-                        if (fragmentByTag is SelectionFragment) {
-                            fragmentByTag.selectManualToggle()
-                        }
+                        getFragment()?.selectManualToggle()
                     }
                 }
             }
             REQUEST_NFC -> {
-                val fragmentByTag = supportFragmentManager.findFragmentByTag(TAG_SELECTION_FRAGMENT)
-                if (fragmentByTag is SelectionFragment) {
-                    fragmentByTag.selectManualToggle()
-                }
+                getFragment()?.selectManualToggle()
 
                 when (resultCode) {
                     Activity.RESULT_OK -> {
@@ -184,6 +176,11 @@ class SelectionActivity : PassIdBaseActivity(),  SelectionFragment.SelectionFrag
         supportFragmentManager.beginTransaction()
             .replace(R.id.container, SuccessFragment.newInstance(title, serverMsg, uid))
             .commitAllowingStateLoss()
+    }
+
+    private fun getFragment(): SelectionFragment? {
+        val fragment = supportFragmentManager.findFragmentByTag(TAG_SELECTION_FRAGMENT)
+        return fragment as SelectionFragment?
     }
 
     companion object {

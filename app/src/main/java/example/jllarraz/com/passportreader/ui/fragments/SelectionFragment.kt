@@ -2,31 +2,22 @@ package example.jllarraz.com.passportreader.ui.fragments
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.graphics.Bitmap
 import android.os.Bundle
-import androidx.appcompat.widget.AppCompatEditText
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.RadioGroup
-import android.widget.Toast
+import android.widget.*
+import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.AppCompatRadioButton
 import androidx.preference.PreferenceManager
-
 import com.mobsandgeeks.saripaar.ValidationError
 import com.mobsandgeeks.saripaar.Validator
-
-import net.sf.scuba.data.Gender
-
-import org.jmrtd.lds.icao.MRZInfo
-
 import example.jllarraz.com.passportreader.R
 import example.jllarraz.com.passportreader.ui.activities.SelectionActivity
 import example.jllarraz.com.passportreader.ui.validators.DateRule
 import example.jllarraz.com.passportreader.ui.validators.DocumentNumberRule
+import net.sf.scuba.data.Gender
+import org.jmrtd.lds.icao.MRZInfo
 
 
 class SelectionFragment : androidx.fragment.app.Fragment(), Validator.ValidationListener {
@@ -50,8 +41,7 @@ class SelectionFragment : androidx.fragment.app.Fragment(), Validator.Validation
                               savedInstanceState: Bundle?): View? {
 
         pfs = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
-        val inflatedView = inflater.inflate(R.layout.fragment_selection, container, false)
-        return inflatedView
+        return inflater.inflate(R.layout.fragment_selection, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -72,6 +62,7 @@ class SelectionFragment : androidx.fragment.app.Fragment(), Validator.Validation
         }
 
         buttonReadNFC = view.findViewById(R.id.buttonReadNfc)
+        updateTextOfButtonReadNFC()
 
         radioGroup!!.setOnCheckedChangeListener { group, checkedId ->
             when (checkedId) {
@@ -125,6 +116,12 @@ class SelectionFragment : androidx.fragment.app.Fragment(), Validator.Validation
         rbManual!!.isChecked = true
     }
 
+    private fun updateTextOfButtonReadNFC() {
+        val actionName = arguments?.getString(ARG_BTN_NFC_READ_ACTON_TEXT, null)
+        if(actionName != null) {
+            buttonReadNFC!!.text = ("${buttonReadNFC!!.text}\n&\n$actionName")
+        }
+    }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -190,11 +187,14 @@ class SelectionFragment : androidx.fragment.app.Fragment(), Validator.Validation
 
     companion object {
 
-        fun newInstance(mrzInfo: MRZInfo, face: Bitmap): PassportDetailsFragment {
-            val myFragment = PassportDetailsFragment()
+        fun newInstance(actionName: String? = null): SelectionFragment {
+            val fragment = SelectionFragment()
             val args = Bundle()
-            myFragment.arguments = args
-            return myFragment
+            args.putString(ARG_BTN_NFC_READ_ACTON_TEXT, actionName)
+            fragment.arguments = args
+            return fragment
         }
+
+        private const val ARG_BTN_NFC_READ_ACTON_TEXT = "ARG_BTN_NFC_READ_ACTON_TEXT"
     }
 }
