@@ -600,7 +600,6 @@ private constructor() {
         } catch (iae: GeneralSecurityException) {
             throw CardServiceException(iae.toString())
         }
-
     }
 
     /**

@@ -115,7 +115,7 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
                 dialog.dismiss()
                 onCancel()
             }
-            .setNeutralButton("Settings"){ dialog, _ ->
+            .setNeutralButton("Settings"){ _, _ ->
                 showSettings()
                 showConnectionError(onRetry, onCancel)
             }
@@ -127,14 +127,14 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
         var title: String? = "PassID Error"
         var msg = "Server returned error:\n${error.message}"
 
-        when {
-            error.code == 401 -> msg = "Authorization failed!"
-            error.code == 412 -> msg = "Passport trust chain verification failed!"
-            error.code == 404 -> {
+        when (error.code) {
+            401 -> msg = "Authorization failed!"
+            412 -> msg = "Passport trust chain verification failed!"
+            404 -> {
                 // TODO: parse message and translate to system language
                 msg = error.message
             }
-            error.code == 406 -> {
+            406 -> {
                 msg = "Passport verification failed!"
                 when {
                     error.message.equals("Invalid DG1 file", true) ->
@@ -143,7 +143,7 @@ abstract class PassIdBaseActivity : AppActivityWithOptionsMenu(), CoroutineScope
                         msg = "Server refused to accept passport's public key!"
                 }
             }
-            error.code == 409 -> msg = "Account already exists!"
+            409 -> msg = "Account already exists!"
             else -> title = null
         }
 

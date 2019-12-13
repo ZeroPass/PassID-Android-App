@@ -24,7 +24,7 @@ data class PassIdApiError(val code: Int, override val message: String, val data:
 
 class PassIdApi(url: String) : Closeable {
 
-    private lateinit var rpc: JsonRpcClient
+    private var rpc: JsonRpcClient
     var timeout: Long = 2000
     var url: String
         set(url) {

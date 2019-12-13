@@ -26,7 +26,6 @@ class Passport : Parcelable {
 
     constructor(`in`: Parcel) {
 
-
         fingerprints = ArrayList()
         this.face = if (`in`.readInt() == 1) `in`.readParcelable(Bitmap::class.java.classLoader) else null
         this.portrait = if (`in`.readInt() == 1) `in`.readParcelable(Bitmap::class.java.classLoader) else null

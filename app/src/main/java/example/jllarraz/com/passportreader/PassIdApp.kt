@@ -22,7 +22,7 @@ class PassIdApp : MultiDexApplication() {
 
         httpClient = OkHttpClient.Builder()
             .sslSocketFactory(sslSocketFactory, trustManager)
-            .hostnameVerifier(HostnameVerifier{ host: String, sslSession: SSLSession ->
+            .hostnameVerifier(HostnameVerifier{ host: String, _: SSLSession ->
                 if(host == allowedHost) {
                     return@HostnameVerifier true
                 }
