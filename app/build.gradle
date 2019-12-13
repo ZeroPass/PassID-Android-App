@@ -41,6 +41,7 @@ android {
         exclude 'META-INF/proguard/androidx-annotations.pro'
         exclude 'META-INF/androidx.exifinterface_exifinterface.version'
     }
+    buildToolsVersion = '29.0.2'
 }
 
 dependencies {
