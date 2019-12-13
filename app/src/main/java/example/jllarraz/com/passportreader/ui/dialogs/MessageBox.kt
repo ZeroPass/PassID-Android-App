@@ -82,10 +82,10 @@ open class MessageBox(context: Context, icon: Icon = Icon.None) : Dialog(context
         this.icon = icon
     }
 
-    override fun setTitle(title: CharSequence) {
+    override fun setTitle(title: CharSequence?) {
         tvTitle.text = title
         tvTitle.show()
-        if(title.isEmpty()) {
+        if(title == null || title.isEmpty()) {
             tvTitle.hide()
         }
     }
