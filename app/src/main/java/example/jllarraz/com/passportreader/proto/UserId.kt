@@ -5,7 +5,6 @@ import android.os.Parcelable
 import org.jmrtd.lds.icao.DG15File
 
 import org.bouncycastle.crypto.digests.RIPEMD160Digest
-import org.bouncycastle.crypto.digests.SHA512tDigest
 
 
 class UserId(userIdBytes: ByteArray) : ProtoByteObject(userIdBytes) {
@@ -27,13 +26,8 @@ class UserId(userIdBytes: ByteArray) : ProtoByteObject(userIdBytes) {
         fun fromAAPublicKey(dg15: DG15File) : UserId {
             val rawAAPubKey = dg15.publicKey.encoded
 
-            val sha512_256 = SHA512tDigest(256)
-            sha512_256.update(rawAAPubKey, 0, rawAAPubKey.size)
-            var digest = ByteArray(sha512_256.digestSize)
-            sha512_256.doFinal(digest, 0)
-
-            ripemd160.update(digest, 0, digest.size)
-            digest = ByteArray(ripemd160.digestSize)
+            ripemd160.update(rawAAPubKey, 0, rawAAPubKey.size)
+            val digest = ByteArray(ripemd160.digestSize)
             ripemd160.doFinal(digest, 0)
 
             return UserId(digest)
