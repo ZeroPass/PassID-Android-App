@@ -21,8 +21,9 @@ import org.powermock.modules.junit4.PowerMockRunner
 
 @RunWith(PowerMockRunner::class)
 @PrepareForTest(Base64::class, Log::class)
-@PowerMockIgnore("javax.net.ssl.*")
+@PowerMockIgnore("javax.net.ssl.*", "javax.crypto.*")
 class PassIdClientTest  {
+    private val app = PassIdApp()
 
     private val tvChallenge = PassIdProtoChallenge.fromhex("47E4EE7F211F73265DD17658F6E21C1318BD6C81F37598E20A2756299542EFCF")
     private val tvCID = CID.fromhex("47E4EE7F")
@@ -47,6 +48,8 @@ class PassIdClientTest  {
     private val tvUID = UserId.fromAAPublicKey(tvDG15)
 
     init {
+        app.onCreate()
+
         // Base64 and Log mocking
         PowerMockito.mockStatic(Base64::class.java)
         PowerMockito.mockStatic(Log::class.java)
@@ -58,25 +61,30 @@ class PassIdClientTest  {
     @ExperimentalUnsignedTypes
     @Test
     fun passIdApiTest() = runBlocking<Unit>  {
-        val api = PassIdApi("http://localhost:8080")
+        val api = PassIdApi("http://localhost:80")
 
         // Ping-pong server
-        val pon = api.ping()
+        val pong = api.ping()
 
         // Request challenge
         var c = api.getChallenge()
         assertEquals("Challenges don't match", tvChallenge, c)
         assertEquals("CIDs don't match", tvCID, c.id)
-        assertEquals("47E4EE7F", c.id.hex())
+        assertEquals("47e4ee7f", c.id.hex())
 
         // Test user registration
-        val s = api.register(tvDG15, tvSOD, c.id, tvCSigs)
+        var s = api.register(tvDG15, tvSOD, c.id, tvCSigs)
         assertEquals("UID don't match", s.uid, tvUID)
+        var msg = api.sayHello(s)
+        assertEquals("Hi, anonymous!", msg)
 
         // Test login
         c = api.getChallenge()
         assertEquals("Challenges don't match", tvChallenge, c)
         assertEquals("CIDs don't match", tvCID, c.id)
-        api.login(tvUID, c.id, tvCSigs)
+
+        s = api.login(tvUID, c.id, tvCSigs)
+        msg = api.sayHello(s)
+        assertEquals("Hi, anonymous!", msg)
     }
 }
