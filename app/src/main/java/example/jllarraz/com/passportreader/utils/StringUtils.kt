@@ -4,7 +4,7 @@ import android.util.Patterns
 import android.util.Base64
 
 object StringUtils {
-    private val hexArray = "0123456789ABCDEF".toCharArray()
+    private val hexArray = "0123456789abcdef".toCharArray()
     fun bytesToHex(bytes: ByteArray): String {
         val hexChars = CharArray(bytes.size * 2)
         for (j in bytes.indices) {
