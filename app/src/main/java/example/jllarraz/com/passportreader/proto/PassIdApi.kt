@@ -3,18 +3,17 @@ package example.jllarraz.com.passportreader.proto
 import android.util.Log
 import example.jllarraz.com.passportreader.PassIdApp
 import example.jllarraz.com.passportreader.utils.DG14FileView
+import example.jllarraz.com.passportreader.utils.StringUtils.b64Encode
 import info.laht.yajrpc.RpcError
-import info.laht.yajrpc.RpcParams
 import info.laht.yajrpc.RpcNoParams
+import info.laht.yajrpc.RpcParams
 import info.laht.yajrpc.RpcResponse
-import kotlinx.coroutines.*
-import java.lang.Exception
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import org.jmrtd.lds.SODFile
 import org.jmrtd.lds.icao.DG15File
-
-import example.jllarraz.com.passportreader.utils.StringUtils.b64Encode
-import okhttp3.internal.lockAndWaitNanos
 import org.jmrtd.lds.icao.DG1File
 import java.io.Closeable
 import java.util.*
@@ -217,6 +216,23 @@ class PassIdApi(url: String) : Closeable {
                     throw e.cause!!
                 }
                 throw e
+            }
+        }
+
+        /**
+         * lockAndWaitNanos was removed from okhttp 4.3.
+         * This implementation was taken from okhttp branch 4.2:
+         * https://github.com/square/okhttp/blob/7cf508a30bb0656bb5c44ddafc16f7f8790c0187/okhttp/src/main/java/okhttp3/internal/Util.kt#L518-L524
+         * */
+        @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+        @Throws(InterruptedException::class)
+        fun Any.lockAndWaitNanos(nanos: Long) {
+            val ms = nanos / 1_000_000L
+            val ns = nanos - ms * 1_000_000L
+            synchronized(this) {
+                if (ms > 0L || nanos > 0) {
+                    (this as Object).wait(ms, ns.toInt())
+                }
             }
         }
     }
