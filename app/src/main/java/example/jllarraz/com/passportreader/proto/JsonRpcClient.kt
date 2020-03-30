@@ -42,11 +42,8 @@ class JsonRpcClient  constructor(
     private val callbacks = mutableMapOf<String, RpcCallback>()
 
     override fun notify(methodName: String, params: RpcParams) {
-        val rid = UUID.randomUUID().toString()
-        Log.i(TAG, "Sending new RPC notification command '$methodName' to '$url'. rpcId=${rid}")
-        send(RpcRequestOut(methodName, params).apply {
-            id = rid
-        })
+        Log.i(TAG, "Sending new RPC notification command '$methodName' to '$url'")
+        send(RpcRequestOut(methodName, params))
     }
 
     @Throws(TimeoutException::class)
