@@ -14,7 +14,7 @@ Android app client for PassID PoC.
   8. If scan completes successfully and there is no communication error with the server,  
      you should end up on the `Success` screen 
   9. Go back and open `Login` screen
-  10. Fill in data into form as in step 6 then follow step 7
+  10. Fill in data into form as in step 5 then follow step 6
   11. After successful login you can try to login again.
       This time the server should request your personal data from passport (EF.DG1 file).
-      If you choose to send thise file to the server it will return greeting with your name.
+      If you choose to send this file to the server it will return greeting with your name.
